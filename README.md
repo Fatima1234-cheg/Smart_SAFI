@@ -1,22 +1,30 @@
 
 
-<div align="center">
+<<div align="center">
+  
+  <!-- Remplace le lien ci-dessous par le chemin de ton image -->
+  <img src="./static/safi.jpg" alt="SmartSafi Logo" width="250" />
 
-# 🌊 SmartSafi
+  <hr style="border: 0.5px solid #e1e4e8; width: 100%; margin: 20px 0;" />
 
-### La ville qui se comprend, s'anticipe et s'optimise.
+  <h3>La ville qui se comprend, s'anticipe et s'optimise.</h3>
 
-SmartSafi est un projet de plateforme Smart City open source visant à centraliser et structurer les données de différents domaines urbains afin de faciliter leur consultation, leur suivi et leur exploitation.
+  <p>
+    SmartSafi est un projet de plateforme Smart City open source visant à centraliser et structurer les données de différents domaines urbains afin de faciliter leur consultation, leur suivi et leur exploitation.
+  </p>
 
-Développé avec Python et Flask, le projet repose sur une architecture modulaire organisée autour de cinq domaines : la gestion des déchets, l'eau, la qualité de l'air, l'agriculture et l'éclairage public.
+  <p>
+    Développé avec <b>Python</b> et <b>Flask</b>, le projet repose sur une architecture modulaire organisée autour de cinq domaines : la gestion des déchets, l'eau, la qualité de l'air, l'agriculture et l'éclairage public.
+  </p>
 
-[![Python](https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/flask-2.3+-000000?logo=flask)](https://flask.palletsprojects.com/)
-[![MongoDB](https://img.shields.io/badge/mongodb-4.0+-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![MQTT](https://img.shields.io/badge/mqtt-IoT--ready-660066?logo=eclipsemosquitto)](https://mqtt.org/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-contribuer)
-
-
+  <p>
+    <!-- Les Badges (Shields.io) -->
+    <img src="https://img.shields.io/badge/python-3.8+-3776AB?style=flat&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/flask-2.3+-000000?style=flat&logo=flask&logoColor=white" alt="Flask" />
+    <img src="https://img.shields.io/badge/mongodb-4.0+-47A248?style=flat&logo=mongodb&logoColor=white" alt="MongoDB" />
+    <img src="https://img.shields.io/badge/mqtt-IoT--ready-800080?style=flat&logo=mqtt&logoColor=white" alt="MQTT" />
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs Welcome" />
+  </p>
 
 </div>
 
