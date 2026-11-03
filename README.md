@@ -1,24 +1,25 @@
 
 
-# 🌊 SmartSafi — Plateforme Smart City pour Safi
+<div align="center">
 
-**Vers une gestion urbaine plus intelligente, connectée et durable.**
+# 🌊 SmartSafi
 
-SmartSafi est un projet de plateforme Smart City open source visant à centraliser et structurer les données de différents domaines urbains afin de faciliter leur consultation, leur suivi et leur exploitation.
+### La ville qui se comprend, s'anticipe et s'optimise.
 
-Développé avec Python et Flask, le projet repose sur une architecture modulaire organisée autour de cinq domaines : la gestion des déchets, l'eau, la qualité de l'air, l'agriculture et l'éclairage public.
+**SmartSafi est un projet de plateforme Smart City open source visant à centraliser et structurer les données de différents domaines urbains afin de faciliter leur consultation, leur suivi et leur exploitation.
+
+Développé avec Python et Flask, le projet repose sur une architecture modulaire organisée autour de cinq domaines : la gestion des déchets, l'eau, la qualité de l'air, l'agriculture et l'éclairage public.**
+
 [![Python](https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/flask-2.3+-000000?logo=flask)](https://flask.palletsprojects.com/)
 [![MongoDB](https://img.shields.io/badge/mongodb-4.0+-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![MQTT](https://img.shields.io/badge/mqtt-IoT--ready-660066?logo=eclipsemosquitto)](https://mqtt.org/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-contribuer)
 
-[Démarrage en 2 minutes](#-démarrage-en-2-minutes) ·
-[Innovation](#-ce-qui-rend-smartsafi-différent) ·
-[Architecture](#-architecture) ·
-[API](#-api) ·
-[Roadmap](#-roadmap)
+
+
+</div>
+
 ---
 
 ## 🎯 Objectifs du projet
