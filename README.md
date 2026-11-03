@@ -6,9 +6,9 @@
 
 ### La ville qui se comprend, s'anticipe et s'optimise.
 
-**SmartSafi est un projet de plateforme Smart City open source visant à centraliser et structurer les données de différents domaines urbains afin de faciliter leur consultation, leur suivi et leur exploitation.
+SmartSafi est un projet de plateforme Smart City open source visant à centraliser et structurer les données de différents domaines urbains afin de faciliter leur consultation, leur suivi et leur exploitation.
 
-Développé avec Python et Flask, le projet repose sur une architecture modulaire organisée autour de cinq domaines : la gestion des déchets, l'eau, la qualité de l'air, l'agriculture et l'éclairage public.**
+Développé avec Python et Flask, le projet repose sur une architecture modulaire organisée autour de cinq domaines : la gestion des déchets, l'eau, la qualité de l'air, l'agriculture et l'éclairage public.
 
 [![Python](https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/flask-2.3+-000000?logo=flask)](https://flask.palletsprojects.com/)
@@ -40,11 +40,11 @@ Les principaux objectifs sont :
 
 | Domaine | Données concernées |
 |---|---|
-| ♻️ Gestion des déchets | Remplissage, statut et localisation des bennes |
-| 💧 Gestion de l'eau | pH, turbidité, conductivité et température |
-| 🌫️ Qualité de l'air | PM2.5, PM10, O₃, NO₂, SO₂ et CO |
-| 🌱 Agriculture intelligente | Humidité, température, pH et nutriments du sol |
-| 💡 Éclairage public | État, intensité et consommation énergétique |
+|  Gestion des déchets | Remplissage, statut et localisation des bennes |
+|  Gestion de l'eau | pH, turbidité, conductivité et température |
+|  Qualité de l'air | PM2.5, PM10, O₃, NO₂, SO₂ et CO |
+|  Agriculture intelligente | Humidité, température, pH et nutriments du sol |
+|  Éclairage public | État, intensité et consommation énergétique |
 
 Ces domaines constituent les axes fonctionnels de la plateforme. La disponibilité de données réelles dépend de l'intégration des sources et équipements correspondants.
 
@@ -193,7 +193,7 @@ Le projet constitue une base technique évolutive sur laquelle pourront être in
 
 ---
 
-## 👩‍💻 Développé par
+##  Développé par
 
 **Fatima Chegdani**
 
