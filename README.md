@@ -1,17 +1,13 @@
 
 
-<table width="100%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td background="./static/safi.jpg" align="center" valign="middle">
-      <br><br>
-      <h1 style="color: white; text-shadow: 2px 2px 4px #000000;">La ville qui se comprend, s'anticipe et s'optimise.</h1>
-      <p style="color: white; text-shadow: 2px 2px 4px #000000; font-size: 16px;">
-        SmartSafi est un projet de plateforme Smart City open source visant à centraliser et structurer les données de différents domaines urbains.
-      </p>
-      <br><br>
-    </td>
-  </tr>
-</table><div align="center">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="100%">
+  <!-- L'image de fond -->
+  <image href="static/safi.jpg" width="800" height="300" preserveAspectRatio="xMidYMid slice" opacity="0.5"/>
+  
+  <!-- Le texte -->
+  <text x="50%" y="50%" text-anchor="middle" fill="white" font-family="Arial" font-size="32" font-weight="bold">La ville qui se comprend, s'anticipe et s'optimise.</text>
+  <text x="50%" y="65%" text-anchor="middle" fill="white" font-family="Arial" font-size="16">SmartSafi est un projet de plateforme Smart City open source.</text>
+</svg>
   
   <!-- Remplace le lien ci-dessous par le chemin de ton image -->
   <img src="./static/safi.jpg" alt="SmartSafi Logo" width="250" />
