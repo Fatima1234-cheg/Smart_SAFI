@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Optimisation trajet - collecte des déchets (routage réel)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 600px; margin: 20px; border-radius: 12px; }
+        .controls { padding: 20px; background: #1a1a2e; color: white; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        select, input, button { padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; }
+        button { background: #ffd700; cursor: pointer; }
+        .result { margin: 0 20px 20px 20px; padding: 15px; background: #0f0f23; border-radius: 8px; }
+        .result ul { margin-left: 20px; }
+        .warning { color: #ffaa00; }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label>Région : 
+            <select id="regionSelect">
+                <option value="all">Toutes</option>
+                <option value="nord">Nord</option>
+                <option value="sud">Sud</option>
+                <option value="est">Est</option>
+                <option value="ouest">Ouest</option>
+            </select>
+        </label>
+        <label>Seuil (%) : <input type="number" id="seuil" value="80" min="0" max="100" style="width:70px"></label>
+        <button id="optimiserBtn">🚛 Optimiser la tournée (routage réel)</button>
+    </div>
+    <div id="map"></div>
+    <div class="result" id="result"></div>
+
+    <script>
+        let map;
+        let currentPolyline = null;
+        let markers = [];
+
+        function initMap() {
+            map = L.map('map').setView([32.2833, -9.2333], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            }).addTo(map);
+        }
+
+       async function optimiser() {
+    const region = document.getElementById('regionSelect').value;
+    const seuil = parseInt(document.getElementById('seuil').value);
+    
+    const response = await fetch('/api/optimiser_trajet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ region: region, seuil: seuil })
+    });
+    const data = await response.json();
+    
+    if (currentPolyline) map.removeLayer(currentPolyline);
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+    
+    if (data.status === 'empty') {
+        document.getElementById('result').innerHTML = `<p>⚠️ ${data.message}</p>`;
+        return;
+    }
+    
+    const depot = { lat: 32.2833, lng: -9.2333 };
+   const waypoints = [
+    [depot.lat, depot.lng],
+    ...data.poubelles.map(p => [p.lat, p.lng])
+];
+    
+    // TENTATIVE DE ROUTAGE RÉEL AVEC OSRM (un seul appel)
+    try {
+        const coordString = waypoints.map(wp => `${wp[1]},${wp[0]}`).join(';');
+        const url = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+        const routeResponse = await fetch(url);
+        if (!routeResponse.ok) throw new Error(`OSRM status ${routeResponse.status}`);
+        const routeData = await routeResponse.json();
+        if (routeData.code !== 'Ok' || !routeData.routes || routeData.routes.length === 0)
+            throw new Error('Aucun itinéraire');
+        
+        const route = routeData.routes[0];
+        currentPolyline = L.geoJSON(data.geometry, {
+    style: {
+        color: '#ff4444',
+        weight: 5
+    }
+}).addTo(map);
+        map.fitBounds(currentPolyline.getBounds(), { padding: [40, 40] });
+        
+        // Marqueurs
+        L.marker([depot.lat, depot.lng], { icon: L.divIcon({ html: '🏁', iconSize: [20,20] }) })
+            .bindPopup('Dépôt').addTo(map);
+        data.poubelles.forEach((p, idx) => {
+            const couleur = p.niveau >= 80 ? 'red' : (p.niveau >= 60 ? 'orange' : 'green');
+            const marker = L.circleMarker([p.lat, p.lng], {
+                radius: 8, fillColor: couleur, color: 'white', weight: 2, fillOpacity: 0.8
+            }).bindPopup(`<b>${p.type}</b><br>${p.adresse}<br>Niveau: ${p.niveau}%<br>Ordre: ${idx+1}`).addTo(map);
+            markers.push(marker);
+        });
+        
+        const totalKm = (route.distance / 1000).toFixed(2);
+        let segmentsHtml = '<ul>';
+        const legs = route.legs;
+        for (let i = 0; i < legs.length; i++) {
+            const legKm = (legs[i].distance / 1000).toFixed(2);
+            if (i === 0) segmentsHtml += `<li>🏁 Dépôt → ${data.poubelles[0].type} : ${legKm} km</li>`;
+            else if (i === legs.length - 1) segmentsHtml += `<li>${data.poubelles[data.poubelles.length-1].type} → 🏁 Dépôt : ${legKm} km</li>`;
+            else segmentsHtml += `<li>${data.poubelles[i-1].type} → ${data.poubelles[i].type} : ${legKm} km</li>`;
+        }
+        segmentsHtml += '</ul>';
+        document.getElementById('result').innerHTML = `
+            <p>✅ <strong>${data.poubelles.length}</strong> poubelle(s) à vider.</p>
+            <p>📏 Distance totale (routière) : <strong>${totalKm} km</strong></p>
+            <p>🚛 Détail des segments :</p>${segmentsHtml}
+            <p>🗺️ Ordre : ${data.poubelles.map((p,i)=>`${i+1}. ${p.type} (${p.region})`).join(' → ')}</p>
+        `;
+    } catch (err) {
+        console.warn("Erreur OSRM, fallback ligne droite continue", err);
+        // Fallback : un seul polyline en ligne droite (mais continu)
+        const latlngs = waypoints.map(wp => L.latLng(wp[0], wp[1]));
+        currentPolyline = L.polyline(latlngs, { color: '#ff4444', weight: 4, opacity: 0.8 }).addTo(map);
+        map.fitBounds(currentPolyline.getBounds());
+        
+        L.marker([depot.lat, depot.lng], { icon: L.divIcon({ html: '🏁', iconSize: [20,20] }) }).addTo(map);
+        data.poubelles.forEach((p, idx) => {
+            const couleur = p.niveau >= 80 ? 'red' : (p.niveau >= 60 ? 'orange' : 'green');
+            const marker = L.circleMarker([p.lat, p.lng], {
+                radius: 8, fillColor: couleur, color: 'white', weight: 2, fillOpacity: 0.8
+            }).bindPopup(`<b>${p.type}</b><br>${p.adresse}<br>Niveau: ${p.niveau}%<br>Ordre: ${idx+1}`).addTo(map);
+            markers.push(marker);
+        });
+        
+        // Calcul distances Haversine pour l'affichage
+        let total = 0, segs = [];
+        let prev = [depot.lat, depot.lng];
+        for (let i = 0; i < data.poubelles.length; i++) {
+            const p = data.poubelles[i];
+            const d = haversine(prev[0], prev[1], p.lat, p.lng);
+            segs.push(d); total += d; prev = [p.lat, p.lng];
+        }
+        const last = haversine(prev[0], prev[1], depot.lat, depot.lng);
+        segs.push(last); total += last;
+        let segHtml = '<ul>';
+        segHtml += `<li>🏁 Dépôt → ${data.poubelles[0].type} : ${segs[0].toFixed(2)} km</li>`;
+        for (let i = 1; i < segs.length-1; i++) segHtml += `<li>${data.poubelles[i-1].type} → ${data.poubelles[i].type} : ${segs[i].toFixed(2)} km</li>`;
+        segHtml += `<li>${data.poubelles[data.poubelles.length-1].type} → 🏁 Dépôt : ${segs[segs.length-1].toFixed(2)} km</li>`;
+        segHtml += '</ul>';
+        document.getElementById('result').innerHTML = `
+            <p class="warning">⚠️ Routage routier indisponible (fallback ligne droite).</p>
+            <p>✅ <strong>${data.poubelles.length}</strong> poubelle(s) à vider.</p>
+            <p>📏 Distance totale (ligne droite) : ${total.toFixed(2)} km</p>
+            <p>🚛 Détail :</p>${segHtml}
+            <p>🗺️ Ordre : ${data.poubelles.map((p,i)=>`${i+1}. ${p.type} (${p.region})`).join(' → ')}</p>
+        `;
+    }
+}
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+        
+        initMap();
+        document.getElementById('optimiserBtn').addEventListener('click', optimiser);
+    </script>
+</body>
+</html>

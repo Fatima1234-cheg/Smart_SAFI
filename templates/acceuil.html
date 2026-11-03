@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Safi - La ville intelligente du Maroc</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow-x: hidden;
+            background: #0a0a1a;
+        }
+
+        /* Import Google Fonts */
+      
+
+        /* === PARTICULES ANIMÉES === */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === SECTION HERO AVEC IMAGE DE FOND === */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        /* Image de fond principale */
+       .hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('{{ url_for('static', filename='safi.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    z-index: -2;
+}
+
+        /* Overlay moderne avec dégradé */
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(10, 10, 26, 0.7), rgba(5, 5, 15, 0.95));
+            z-index: -1;
+        }
+
+        /* === NAVIGATION FLOTTANTE === */
+        .navbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideDown 0.8s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes slideDown {
+            from {
+                top: -100px;
+                opacity: 0;
+            }
+            to {
+                top: 20px;
+                opacity: 1;
+            }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 0px rgba(255, 215, 0, 0); }
+            50% { transform: scale(1.1); text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 35px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 20px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::before {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: #ffd700;
+            transform: translateY(-2px);
+        }
+
+        a.btn-connexion {
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            border: none;
+            color: #1a1a2e;
+            padding: 10px 28px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-connexion::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-connexion:hover::before {
+            left: 100%;
+        }
+
+        .btn-connexion:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        /* === CONTENU PRINCIPAL === */
+        .hero-content {
+            max-width: 1000px;
+            padding: 0 30px;
+            z-index: 2;
+            margin-top: 60px;
+            animation: fadeInUp 1s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge {
+            background: rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px 28px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            animation: glow 2s infinite;
+            font-size: 16px;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+        }
+
+        .hero-content h1 {
+            font-size: 80px;
+            font-weight: 900;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #fff, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientShift 5s infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-content h1 span {
+            background: linear-gradient(135deg, #ffd700, #ff8c00, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-content p {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            margin-bottom: 45px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            color: #1a1a2e;
+            border: none;
+            padding: 18px 45px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            color: #ffd700;
+            padding: 18px 45px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* === STATISTIQUES 3D === */
+        .stats-3d {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 80px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card-3d {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            padding: 30px 45px;
+            border-radius: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s;
+            cursor: pointer;
+            animation: float 3s ease-in-out infinite;
+            min-width: 180px;
+        }
+
+        .stat-card-3d:nth-child(1) { animation-delay: 0s; }
+        .stat-card-3d:nth-child(2) { animation-delay: 0.5s; }
+        .stat-card-3d:nth-child(3) { animation-delay: 1s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .stat-card-3d:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: #ffd700;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .stat-number-3d {
+            font-size: 56px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-label-3d {
+            font-size: 16px;
+            color: rgba(255,255,255,0.8);
+            margin-top: 12px;
+        }
+
+        /* === CARTES DES SERVICES === */
+        .services-section {
+            padding: 120px 60px;
+            background: linear-gradient(180deg, #0f0c29, #1a1a3e);
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 52px;
+            margin-bottom: 25px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 70px;
+            font-size: 20px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .service-card-3d {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 50px 35px;
+            text-align: center;
+            transition: all 0.4s;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card-3d::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.15), transparent);
+            transition: left 0.5s;
+        }
+
+        .service-card-3d:hover::before {
+            left: 100%;
+        }
+
+        .service-card-3d:hover {
+            transform: translateY(-15px) rotateX(5deg);
+            border-color: #ffd700;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .service-icon {
+            font-size: 75px;
+            margin-bottom: 25px;
+            display: inline-block;
+            animation: iconFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .service-card-3d h3 {
+            font-size: 28px;
+            margin-bottom: 18px;
+            color: #ffd700;
+        }
+
+        .service-card-3d p {
+            font-size: 16px;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.7;
+        }
+
+        /* === SECTION TEMPS RÉEL === */
+        .realtime-section {
+            padding: 120px 60px;
+            background: linear-gradient(0deg, #0f0c29, #1a1a3e);
+        }
+
+        .dashboard-3d {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .realtime-card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 35px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .realtime-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,215,0,0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .realtime-card:hover::after {
+            opacity: 1;
+        }
+
+        .realtime-card:hover {
+            transform: translateY(-5px);
+            border-color: #ffd700;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,215,0,0.3);
+        }
+
+        .card-emoji {
+            font-size: 50px;
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .card-header h3 {
+            color: white;
+            font-size: 24px;
+        }
+
+        .metric {
+            margin-bottom: 25px;
+        }
+
+        .metric-label {
+            color: rgba(255,255,255,0.7);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: #ffd700;
+        }
+
+        .progress-ring {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill-animated {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            border-radius: 10px;
+            animation: fillProgress 2s ease-out forwards;
+        }
+
+        @keyframes fillProgress {
+            to {
+                width: var(--target);
+            }
+        }
+
+        /* === SECTION ACTUALITÉS === */
+        .news-section {
+            padding: 100px 60px;
+            background: linear-gradient(180deg, #1a1a3e, #0f0c29);
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .news-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .news-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            border-color: #ffd700;
+        }
+
+        .news-image {
+            height: 230px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .news-content {
+            padding: 25px;
+        }
+
+        .news-date {
+            font-size: 13px;
+            color: #ffd700;
+            margin-bottom: 12px;
+        }
+
+        .news-title {
+            font-size: 20px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .news-excerpt {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        /* === FOOTER === */
+        .footer {
+            background: rgba(5, 5, 15, 0.98);
+            padding: 50px 60px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .footer p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+        }
+
+        /* === FLÈCHE DE SCROLL === */
+        .scroll-arrow {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 35px;
+            color: white;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+            z-index: 10;
+            background: rgba(255,255,255,0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(15px); }
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 1024px) {
+            .hero-content h1 {
+                font-size: 60px;
+            }
+            .section-title {
+                font-size: 42px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                width: 95%;
+                padding: 12px 20px;
+            }
+            .nav-links {
+                gap: 12px;
+            }
+            .nav-links a {
+                font-size: 12px;
+            }
+            .btn-connexion {
+                padding: 6px 15px;
+                font-size: 12px;
+            }
+            .hero-content h1 {
+                font-size: 36px;
+            }
+            .hero-content p {
+                font-size: 16px;
+            }
+            .section-title {
+                font-size: 32px;
+            }
+            .section-subtitle {
+                font-size: 16px;
+            }
+            .services-section, .realtime-section, .news-section {
+                padding: 60px 20px;
+            }
+            .stat-card-3d {
+                padding: 20px 30px;
+                min-width: 140px;
+            }
+            .stat-number-3d {
+                font-size: 36px;
+            }
+            .btn-primary, .btn-secondary {
+                padding: 14px 30px;
+                font-size: 16px;
+            }
+            .service-card-3d {
+                padding: 35px 25px;
+            }
+            .service-icon {
+                font-size: 55px;
+            }
+            .service-card-3d h3 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas pour les particules -->
+    <canvas id="particles"></canvas>
+
+    <!-- Navigation flottante -->
+    <nav class="navbar">
+        <div class="logo">
+            <span class="logo-icon">🌆</span>
+            <span>SMART SAFI</span>
+        </div>
+        <div class="nav-links">
+            <a href="#">Accueil</a>
+            <a href="#contact">Contact</a>
+            <a href="/login" class="btn-connexion">Connexion</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section avec image de fond -->
+    <div class="hero">
+        <div class="hero-background"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            
+            <h1>
+                Bienvenue à <span>Safi</span><br>
+                L'avenir est maintenant
+            </h1>
+            <p>
+                Découvrez comment Safi se transforme en une ville intelligente innovante, 
+                alliant technologie, durabilité et qualité de vie. Rejoignez-nous dans 
+                cette aventure vers un avenir plus connecté et responsable.
+            </p>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="window.location.href='/dechets'">
+                    🚀 Explorer la solution
+                </button>
+                <button class="btn-secondary" onclick="scrollToServices()">
+                    📹 En savoir plus
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+   
+   
+
+    <!-- Footer -->
+    <div class="footer" id="contact">
+        <p>© 2026 Smart City Safi - Tous droits réservés | Une initiative pour un avenir durable 🌍</p>
+        <p style="margin-top: 15px;">📞 Contactez-nous : +212 5 23 45 67 89 | 📧 contact@smartsafi.ma</p>
+    </div>
+
+    <script>
+        // Système de particules avancé
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        
+        let particles = [];
+        let mouseX = 0, mouseY = 0;
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 0.8;
+                this.speedY = (Math.random() - 0.5) * 0.8;
+                this.color = `hsl(${Math.random() * 60 + 40}, 100%, 55%)`;
+            }
+            
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 120) {
+                    const angle = Math.atan2(dy, dx);
+                    const force = (120 - distance) / 800;
+                    this.speedX += Math.cos(angle) * force;
+                    this.speedY += Math.sin(angle) * force;
+                }
+                
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+                
+                this.speedX *= 0.99;
+                this.speedY *= 0.99;
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+            }
+        }
+        
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 120; i++) {
+                particles.push(new Particle());
+            }
+        }
+        
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        resizeCanvas();
+        initParticles();
+        animateParticles();
+        
+        // Animation des barres de progression
+        const progressBars = document.querySelectorAll('.progress-fill-animated');
+        progressBars.forEach(bar => {
+            const target = bar.style.getPropertyValue('--target');
+            setTimeout(() => {
+                bar.style.width = target;
+            }, 200);
+        });
+        
+        // Scroll smooth vers la section services
+        function scrollToServices() {
+            document.getElementById('services').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Animation des cartes au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.service-card-3d, .realtime-card, .stat-card-3d, .news-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(40px)';
+            el.style.transition = 'all 0.7s ease';
+            observer.observe(el);
+        });
+        
+        // Effet de parallax sur l'image de fond
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const background = document.querySelector('.hero-background');
+            if (background) {
+                background.style.transform = `translateY(${scrolled * 0.4}px)`;
+            }
+        });
+        
+        console.log('🚀 Smart City Safi - Interface chargée avec succès!');
+    </script>
+</body>
+</html>

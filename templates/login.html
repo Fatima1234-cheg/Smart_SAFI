@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart City Safi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a2e;
+            color: #f2f2f2;
+        }
+
+        .login-card {
+            width: min(450px, 90vw);
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 26px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(18px);
+            padding: 42px 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(255,215,0,0.1), transparent 25%),
+                        radial-gradient(circle at bottom left, rgba(255,215,0,0.05), transparent 20%);
+            pointer-events: none;
+        }
+
+        .avatar {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: rgba(255,215,0,0.15);
+            border: 1px solid rgba(255,215,0,0.3);
+            display: grid;
+            place-items: center;
+            margin: 0 auto 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .avatar svg {
+            width: 42px;
+            height: 42px;
+            fill: #ffd700;
+            opacity: 0.95;
+        }
+
+        .login-card h2 {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+            color: #ffd700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card p {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 30px;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        .input-group .icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            color: #ffd700;
+            pointer-events: none;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px 18px 16px 52px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-group input:focus {
+            border-color: #ffd700;
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.15);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px 0;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255,215,0,0.3);
+        }
+
+        .error {
+            background: rgba(255,0,0,0.15);
+            color: #ff8888;
+            border: 1px solid rgba(255,0,0,0.3);
+            padding: 12px 14px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Styles pour l'icône de fermeture (croix) */
+        .close-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: #ffd700;
+            font-size: 28px;
+            font-weight: 300;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            z-index: 2;
+            line-height: 1;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .close-icon:hover {
+            background: #ffd700;
+            color: #1a1a2e;
+            transform: scale(1.05);
+            border-color: #ffd700;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <!-- Icône de fermeture (croix) pour retour à l'accueil -->
+        <a href="/" class="close-icon" aria-label="Retour à la page d'accueil">✕</a>
+
+        <div class="avatar">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M32 32c7.732 0 14-6.268 14-14S39.732 4 32 4 18 10.268 18 18s6.268 14 14 14zm0 6c-9.941 0-18 8.059-18 18 0 1.657 1.343 3 3 3h30c1.657 0 3-1.343 3-3 0-9.941-8.059-18-18-18z"/>
+            </svg>
+        </div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% if csrf_token is defined %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+            <div class="input-group">
+                <span class="icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                        <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 2v.511l-8 4.8-8-4.8V6h16ZM4 18V8.389l7.39 4.434a1 1 0 0 0 1.22 0L20 8.389V18H4Z"/>
+                    </svg>
+                </span>
+                <input type="text" name="username" placeholder="Nom d'utilisateur ou email" required>
+            </div>
+
+            <div class="input-group">
+                <span class="icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                        <path d="M17 8V7a5 5 0 0 0-10 0v1H5v12h14V8h-2Zm-8-1a3 3 0 0 1 6 0v1H9V7Zm9 11H6V10h12v8Zm-6-4a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/>
+                    </svg>
+                </span>
+                <input type="password" name="password" placeholder="Mot de passe" required>
+            </div>
+
+            <button type="submit" class="login-btn">SE CONNECTER</button>
+        </form>
+
+        
+    </div>
+</body>
+</html>

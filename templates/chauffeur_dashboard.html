@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Chauffeur | Smart City Safi – Mes régions uniquement</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0b0f1c;
+            color: #eef2ff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 12px 24px;
+             display: flex;
+    justify-content: space-between;  /* logo à gauche, header-right à droite */
+    align-items: center;
+    gap: 20px; 
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+            z-index: 10;
+        }
+       
+
+.header-right {
+    display: flex;
+    gap: 16px;      /* espace entre badge, user-info et bouton */
+    align-items: center;
+}
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFD700, #FFB347);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .logo p {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        .region-badge {
+            background: #1e293b;
+            padding: 5px 12px;
+            border-radius: 40px;
+              font-size: 14px;
+            font-weight: 500;
+            border-left: 3px solid #FFD966;
+            color: #FFD966;
+        }
+        .user-info {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 5px 12px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: bolder;
+          
+            color: #e6ae06;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            padding: 8px 16px;
+            border-radius: 40px;
+            text-decoration: none;
+            color: #f87171;
+            font-size: 12px;
+            font-weight: 200;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        .dashboard {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 0;
+        }
+        #map {
+            flex: 2;
+            height: 100%;
+            background: #020617;
+            border-radius: 0;
+            z-index: 1;
+        }
+        .sidebar {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            border-left: 1px solid rgba(255, 215, 0, 0.15);
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .stat-card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 20px;
+            padding: 12px 8px;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); background: rgba(30, 41, 59, 0.8); }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #FFD966;
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+        }
+        .mission-card {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 24px;
+            padding: 18px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        .mission-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #FFD966;
+        }
+        .mission-content {
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .urgence-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            padding: 4px 8px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .camion-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 12px 16px;
+            text-align: center;
+            border-left: 4px solid #FFD966;
+        }
+        .camion-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+        .camion-valeur {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #FFD966;
+        }
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn {
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #FFD966, #FFB347);
+            color: #0f172a;
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(255, 217, 102, 0.3);
+        }
+        .btn-secondary {
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+            border: 1px solid #475569;
+        }
+        .btn-secondary:hover {
+            background: #334155;
+        }
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 8px 0 12px 0;
+            letter-spacing: 0.5px;
+            color: #FFD966;
+        }
+        .poubelle-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .poubelle-item {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 16px;
+            padding: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border-left: 4px solid;
+        }
+        .poubelle-item:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateX(4px);
+        }
+        .poubelle-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .progress-bar {
+            height: 6px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.2s;
+            border-radius: 10px;
+        }
+        .poubelle-adresse {
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            margin-top: 4px;
+        }
+        .region-tag {
+            font-size: 0.65rem;
+            background: #0f172a;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 30px;
+            margin-top: 5px;
+            color: #94a3b8;
+        }
+        .route-info {
+            background: #0f172a;
+            border-radius: 16px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            border: 1px solid #334155;
+        }
+        .timestamp {
+            text-align: center;
+            font-size: 0.7rem;
+            padding: 8px;
+            color: #64748b;
+            background: #020617;
+            border-top: 1px solid #1e293b;
+        }
+        .sidebar::-webkit-scrollbar, .poubelle-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #FFD966;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <h1>🚛 SMART SAFI</h1>
+            <p>Espace chauffeur · Collecte par zone</p>
+        </div>
+        <div class="header-right">
+        <div class="region-badge" id="regionBadge">📍 Chargement zones...</div>
+        <div class="user-info">👤 {{ username }}</div>
+        <a href="/logout" class="btn-logout">🔓 Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div id="map"></div>
+        <div class="sidebar">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value" id="totalPoubelles">0</div><div class="stat-label">Total (mes zones)</div></div>
+                <div class="stat-card"><div class="stat-value" id="urgencesCount">0</div><div class="stat-label">Urgentes</div></div>
+                <div class="stat-card"><div class="stat-value" id="attentionCount">0</div><div class="stat-label">Attention</div></div>
+            </div>
+
+            <div class="mission-card" id="missionCard">
+                <div class="mission-title">🎯 Mission principale</div>
+                <div class="mission-content" id="missionText">Chargement...</div>
+            </div>
+
+            <div class="camion-info">
+                <div class="camion-label">🚛 Camion affecté</div>
+                <div class="camion-valeur" id="camionDisplays">---</div>
+            </div>
+            <input type="hidden" id="camionType" value="">
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="optimiserTrajet()">🗺️ Optimiser le trajet (mes zones)</button>
+                <button class="btn btn-primary" onclick="envoyerVidage()">🚛 Lancer la collecte (toutes mes zones)</button>
+            </div>
+
+            <div id="optimisationResult"></div>
+
+            <div class="section-title">📋 Points de collecte — uniquement mes secteurs</div>
+            <div id="poubelleList" class="poubelle-list"></div>
+        </div>
+    </div>
+    <div class="timestamp" id="timestamp">🕐 Synchronisation temps réel</div>
+
+    <script>
+        let map, markers = {}, currentRouteLayer = null;
+        let allPoubellesRaw = [];
+        let currentFilteredBins = [];
+        const socket = io();
+
+        // Récupération des régions depuis le template (injecté par Flask)
+        let driverRegions = {{ regions | tojson }};
+
+        // ---------- 1. Récupération des régions assignées au chauffeur (fallback API si vide) ----------
+        async function loadDriverRegions() {
+            if (driverRegions && driverRegions.length > 0) {
+                updateRegionBadge();
+                return driverRegions;
+            }
+            try {
+                const resp = await fetch('/api/driver/regions', { credentials: 'include' });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.regions && Array.isArray(data.regions)) {
+                        driverRegions = data.regions;
+                        updateRegionBadge();
+                        return driverRegions;
+                    }
+                }
+                const meResp = await fetch('/api/me', { credentials: 'include' });
+                if (meResp.ok) {
+                    const me = await meResp.json();
+                    if (me.regions && Array.isArray(me.regions)) {
+                        driverRegions = me.regions;
+                        updateRegionBadge();
+                        return driverRegions;
+                    }
+                }
+                driverRegions = [];
+                updateRegionBadge(true);
+                return driverRegions;
+            } catch (err) {
+                console.error("Erreur chargement régions:", err);
+                driverRegions = [];
+                updateRegionBadge(true);
+                return driverRegions;
+            }
+        }
+
+        function updateRegionBadge(isAll = false) {
+            const badge = document.getElementById('regionBadge');
+            if (!driverRegions.length || isAll) {
+                badge.innerHTML = `🗺️ Toutes les régions (Safi entière)`;
+                badge.style.background = "#2d3a5e";
+            } else {
+                badge.innerHTML = `📍 Mes zones : ${driverRegions.map(r => r.toUpperCase()).join(' / ')}`;
+                badge.style.background = "#1e293b";
+            }
+        }
+
+        function filterBinsByDriver(bins) {
+            if (!bins || !bins.length) return [];
+            if (driverRegions.length === 0) return bins;
+            return bins.filter(bin => bin.region && driverRegions.includes(bin.region.toLowerCase()));
+        }
+
+        function updateAffichage(filteredBins, allBinsRaw = null) {
+            if (!filteredBins) filteredBins = [];
+            currentFilteredBins = filteredBins;
+            if (allBinsRaw) allPoubellesRaw = allBinsRaw;
+
+            const total = filteredBins.length;
+            const urgences = filteredBins.filter(p => p.niveau >= 80).length;
+            const attention = filteredBins.filter(p => p.niveau >= 60 && p.niveau < 80).length;
+            document.getElementById('totalPoubelles').innerHTML = total;
+            document.getElementById('urgencesCount').innerHTML = urgences;
+            document.getElementById('attentionCount').innerHTML = attention;
+
+            const urgentes = filteredBins.filter(p => p.niveau >= 80);
+            const missionDiv = document.getElementById('missionText');
+            if (urgentes.length) {
+                missionDiv.innerHTML = `<span class="urgence-badge">🔴 ${urgentes.length} urgence(s) dans mes zones</span><ul style="margin-top:8px; list-style:none;">${urgentes.map(u => `<li>📍 ${u.type} – ${u.adresse} (${u.niveau}%) [${u.region?.toUpperCase()}]</li>`).join('')}</ul>`;
+                document.getElementById('missionCard').style.borderLeft = '3px solid #ef4444';
+            } else {
+                missionDiv.innerHTML = '✅ Aucune urgence dans vos secteurs – collecte régulière';
+                document.getElementById('missionCard').style.borderLeft = '3px solid #22c55e';
+            }
+
+            let listHtml = '';
+            filteredBins.forEach(p => {
+                const couleurFond = p.niveau >= 80 ? '#ef4444' : (p.niveau >= 60 ? '#f59e0b' : '#22c55e');
+                const status = p.niveau >= 80 ? 'URGENCE' : (p.niveau >= 60 ? 'ATTENTION' : 'NORMAL');
+                listHtml += `
+                    <div class="poubelle-item" style="border-left-color: ${couleurFond}" onclick="centrerCarte(${p.lat}, ${p.lng}, ${p.id})">
+                        <div class="poubelle-header">
+                            <span>${p.type}</span>
+                            <span style="font-size:0.7rem; background:${couleurFond}20; padding:2px 6px; border-radius:20px;">${status}</span>
+                        </div>
+                        <div>📊 ${p.niveau}%</div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${p.niveau}%; background:${couleurFond}"></div></div>
+                        <div>👃 Odeur: ${p.odeur}%</div>
+                        <div class="poubelle-adresse">📍 ${p.adresse}</div>
+                        <div class="region-tag">🗺️ Secteur: ${p.region ? p.region.toUpperCase() : 'Général'}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('poubelleList').innerHTML = listHtml || '<div style="padding:20px;text-align:center;">⚠️ Aucune poubelle dans vos zones</div>';
+
+            Object.values(markers).forEach(m => map.removeLayer(m));
+            markers = {};
+            filteredBins.forEach(p => {
+                const popup = `<div style="min-width:180px;"><b>${p.type}</b><br>${p.adresse}<br>📊 Niveau: ${p.niveau}%<br>👃 Odeur: ${p.odeur}%<br>🗺️ ${p.region?.toUpperCase()}<br><button onclick="envoyerVidagePoubelle(${p.id})" style="margin-top:8px; background:#ef4444; border:none; padding:5px 10px; border-radius:20px; color:white; cursor:pointer;">🚛 Collecter</button></div>`;
+                markers[p.id] = L.marker([p.lat, p.lng], { icon: getIcone(p) }).bindPopup(popup).addTo(map);
+            });
+
+            if (filteredBins.length > 0) {
+                const group = L.featureGroup(Object.values(markers));
+                map.fitBounds(group.getBounds().pad(0.1));
+            } else {
+                map.setView([32.2833, -9.2333], 12);
+            }
+        }
+
+        function getIcone(poubelle) {
+            let niveau = poubelle.niveau;
+            let couleur = '#22c55e', taille = 34;
+            if (niveau >= 80) { couleur = '#ef4444'; taille = 46; }
+            else if (niveau >= 60) { couleur = '#f59e0b'; taille = 40; }
+            const types = { 'VERRE':'🥤', 'CARTON':'📦', 'MENAGER':'🍌', 'PAPIER':'📄' };
+            const emoji = types[poubelle.type] || '🗑️';
+            return L.divIcon({
+                html: `<div style="background: ${couleur}; width: ${taille}px; height: ${taille}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid white; box-shadow: 0 0 12px rgba(0,0,0,0.4);">${emoji}</div>`,
+                iconSize: [taille, taille],
+                className: 'custom-icon'
+            });
+        }
+
+        async function fetchAndDisplayBins() {
+            try {
+                let url = '/api/dechets';
+                if (driverRegions.length > 0) {
+                    url += `?regions=${driverRegions.map(r => encodeURIComponent(r)).join(',')}`;
+                }
+                const resp = await fetch(url, { credentials: 'include' });
+                const data = await resp.json();
+                const allBins = data.poubelles || [];
+                const filtered = filterBinsByDriver(allBins);
+                updateAffichage(filtered, allBins);
+                if (data.derniere_maj) document.getElementById('timestamp').innerHTML = `🕐 Dernière mise à jour : ${data.derniere_maj}`;
+            } catch (err) {
+                console.error(err);
+                document.getElementById('poubelleList').innerHTML = '<div style="padding:20px;">❌ Erreur de chargement</div>';
+            }
+        }
+
+        async function envoyerVidage() {
+            const camionType = document.getElementById('camionType').value;
+            if (!camionType) { alert("Type de camion non défini."); return; }
+            try {
+                const payload = { camionType, regions: driverRegions };
+                const res = await fetch('/api/commande/vider', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    alert(`✅ Collecte lancée (${camionType}) sur vos zones ${driverRegions.length ? driverRegions.join(', ') : 'toutes'}`);
+                    await fetchAndDisplayBins();
+                    if (currentRouteLayer) map.removeLayer(currentRouteLayer);
+                    document.getElementById('optimisationResult').innerHTML = '';
+                } else alert("❌ Erreur lors de la commande");
+            } catch(e) { alert("Erreur réseau"); }
+        }
+
+        async function envoyerVidagePoubelle(id) {
+            const camionType = document.getElementById('camionType').value;
+            try {
+                const payload = { camionType, regions: driverRegions, poubelle_id: id };
+                const res = await fetch('/api/commande/vider', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    alert(`🚛 Collecte ponctuelle #${id} lancée (zones autorisées)`);
+                    await fetchAndDisplayBins();
+                    if (currentRouteLayer) map.removeLayer(currentRouteLayer);
+                    document.getElementById('optimisationResult').innerHTML = '';
+                } else alert("❌ Échec collecte");
+            } catch(e) { alert("Erreur"); }
+        }
+
+        async function optimiserTrajet() {
+            try {
+                const payload = { seuil: 80, regions: driverRegions };
+                const res = await fetch('/api/optimiser_trajet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                const result = await res.json();
+                if (result.status === "empty") {
+                    document.getElementById('optimisationResult').innerHTML = `<div class="route-info">ℹ️ Aucune poubelle urgente (≥80%) dans vos zones.</div>`;
+                    if (currentRouteLayer) map.removeLayer(currentRouteLayer);
+                    return;
+                }
+                if (result.status === "ok") {
+                    if (currentRouteLayer) map.removeLayer(currentRouteLayer);
+                    if (result.geometry) {
+                        currentRouteLayer = L.geoJSON(result.geometry, { style: { color: '#FFD966', weight: 5, opacity: 0.9 } }).addTo(map);
+                        map.fitBounds(currentRouteLayer.getBounds());
+                    }
+                    let html = `<div class="route-info"><strong>🗺️ Trajet optimisé (mes secteurs)</strong><br>📏 ${result.distance_km} km · ⏱️ ${result.duration_min} min<br><strong>Ordre :</strong><ul>`;
+                    (result.poubelles || []).forEach((p, i) => { html += `<li>${i+1}. ${p.type} – ${p.niveau}% [${p.region?.toUpperCase()}]</li>`; });
+                    html += `</ul><button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="envoyerCollecteOptimisee()">🚀 Démarrer tournée (mes zones)</button></div>`;
+                    document.getElementById('optimisationResult').innerHTML = html;
+                } else throw new Error();
+            } catch(e) {
+                document.getElementById('optimisationResult').innerHTML = `<div class="route-info">❌ Erreur optimisation</div>`;
+            }
+        }
+
+        async function envoyerCollecteOptimisee() {
+            const camionType = document.getElementById('camionType').value;
+            try {
+                const payload = { camionType, regions: driverRegions, type_optimise: true };
+                const res = await fetch('/api/commande/vider', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    alert(`🚛 Tournée optimisée lancée (zones: ${driverRegions.length ? driverRegions.join(', ') : 'toutes'})`);
+                    await fetchAndDisplayBins();
+                    if (currentRouteLayer) map.removeLayer(currentRouteLayer);
+                    document.getElementById('optimisationResult').innerHTML = '';
+                } else alert("❌ Erreur lancement");
+            } catch(e) { alert("Erreur"); }
+        }
+
+        async function chargerDernierCamion() {
+            try {
+                const res = await fetch('/api/dernier_camion', { credentials: 'include' });
+                const data = await res.json();
+                const camion = data.camionType;
+                let label = camion === 'petit' ? '🚚 Petit (max 3)' : (camion === 'moyen' ? '🚛 Moyen (max 6)' : '🚛🚛 Grand (illimité)');
+                document.getElementById('camionDisplays').innerHTML = label;
+                document.getElementById('camionType').value = camion;
+            } catch(e) {
+                document.getElementById('camionDisplays').innerHTML = '🚛 Moyen (défaut)';
+                document.getElementById('camionType').value = 'moyen';
+            }
+        }
+
+        socket.on('dechets_update', (data) => {
+            if (data.poubelles) {
+                const filtered = filterBinsByDriver(data.poubelles);
+                updateAffichage(filtered, data.poubelles);
+            }
+            if (data.derniere_maj) document.getElementById('timestamp').innerHTML = `🕐 Dernière mise à jour : ${data.derniere_maj}`;
+        });
+
+        function centrerCarte(lat, lng, id) {
+            map.setView([lat, lng], 16);
+            if (markers[id]) markers[id].openPopup();
+        }
+
+        function initMap() {
+            map = L.map('map').setView([32.2833, -9.2333], 12);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap | Safi, Maroc',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        (async function() {
+            initMap();
+            await loadDriverRegions();
+            await chargerDernierCamion();
+            await fetchAndDisplayBins();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart City Safi</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        /* ========== STYLES GLOBAUX (inchangés) ========== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #ffffff; overflow: hidden; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 280px; height: 100vh; background: #0f0f23; border-right: 1px solid rgba(255,215,0,0.15); padding: 25px 0; display: flex; flex-direction: column; justify-content: space-between; z-index: 100; overflow-y: auto; }
+        .logo { text-align: center; padding: 0 20px 25px; border-bottom: 1px solid rgba(255,215,0,0.15); margin-bottom: 20px; }
+        .logo h2 { color: #ffd700; font-size: 25px; letter-spacing: 2px; }
+        .nav-menu { flex: 1; }
+        .nav-item { display: flex; align-items: center; padding: 12px 20px; margin: 6px 15px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.7); }
+        .nav-item:hover { background: rgba(255,215,0,0.1); color: #ffd700; }
+        .nav-item.active { background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,140,0,0.1)); color: #ffd700; border-left: 3px solid #ffd700; }
+        .nav-item .emoji { font-size: 20px; width: 30px; }
+        .nav-item span:not(.emoji) { font-size: 14px; font-weight: 500; }
+        .nav-item .logout-arrow {
+            margin-left: auto;
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+        .nav-item:hover .logout-arrow {
+            transform: translateX(5px);
+        }
+        .sidebar-section { border-top: 1px solid rgba(255,215,0,0.15); margin-top: 20px; padding-top: 15px; }
+        .sidebar-title { font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 8px 20px; letter-spacing: 1px; }
+        .logout-btn { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; margin: 10px 15px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; color: rgba(255,255,255,0.7); background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); }
+        .logout-btn:hover { background: rgba(255,68,68,0.2); color: #ff4444; border-color: #ff4444; }
+        .logout-btn .emoji { font-size: 18px; }
+        .logout-arrow { font-size: 16px; transition: transform 0.3s; }
+        .logout-btn:hover .logout-arrow { transform: translateX(5px); }
+        .main-content { margin-left: 280px; padding: 20px 30px; height: 100vh; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .header h1 { font-size: 25px; font-weight: 600; }
+        .header h1 span { color: #ffd700; }
+        .panel { display: none; animation: fadeIn 0.3s ease; }
+        .panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .panel-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #ffd700; padding-bottom: 10px; border-bottom: 2px solid rgba(255,215,0,0.3); }
+        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; text-align: center; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.08); border-color: rgba(255,215,0,0.3); }
+        .stat-value { font-size: 28px; font-weight: 700; color: #ffd700; margin-bottom: 5px; }
+        .stat-label { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .dechets-stats { display: flex; gap: 15px; margin-bottom: 20px; }
+        .dechets-stat-card { flex: 1; background: rgba(255,255,255,0.1); border-radius: 20px; padding: 12px; text-align: center; }
+        .dechets-stat-value { font-size: 24px; font-weight: bold; color: #ffd700; }
+        .dechets-stat-label { font-size: 11px; color: #aaa; }
+        .dechets-map { background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        #dechetsMap { width: 100%; height: 450px; }
+        #regionsContainer { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
+        .region-card { background: rgba(20,30,55,0.8); backdrop-filter: blur(8px); border-radius: 20px; padding: 15px; border: 1px solid rgba(255,215,0,0.3); transition: 0.2s; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .region-card:hover { transform: translateY(-5px); border-color: #ffd700; }
+        .region-card > h3, .region-card > div:last-child { grid-column: 1 / -1; }
+        .poubelle-item { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; cursor: pointer; transition: 0.2s; border-left: 4px solid; }
+        .poubelle-item.urgence { border-left-color: #ff0000; animation: pulse 1s infinite; }
+        .poubelle-item.attention { border-left-color: #ffaa00; }
+        .poubelle-item.normal { border-left-color: #00ff00; }
+        @keyframes pulse { 0% { background: rgba(255,0,0,0.1); } 50% { background: rgba(255,0,0,0.3); } 100% { background: rgba(255,0,0,0.1); } }
+        .poubelle-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .poubelle-type { font-weight: bold; font-size: 14px; }
+        .barre { height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+        .barre-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+        .barre-fill.vert { background: #00ff00; }
+        .barre-fill.jaune { background: #ffaa00; }
+        .barre-fill.rouge { background: #ff0000; }
+        .poubelle-odeur { font-size: 12px; color: rgba(255,255,255,0.7); margin: 5px 0; }
+        .poubelle-adresse { font-size: 11px; color: #888; margin-top: 5px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
+        .info-card { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .info-card .value { font-size: 28px; font-weight: 700; color: #ffd700; }
+        .status-text { font-size: 12px; margin-top: 5px; }
+        .status-normal { color: #00ff00; }
+        .status-attention { color: #ffaa00; }
+        .status-danger { color: #ff4444; }
+        .problemes { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-top: 10px; }
+        .probleme-item { background: rgba(255,68,68,0.15); border-left: 3px solid #ff4444; padding: 10px 12px; margin: 8px 0; border-radius: 6px; font-size: 13px; color: #ff8888; }
+        .ok-item { background: rgba(0,255,0,0.1); border-left: 3px solid #00ff00; padding: 12px; border-radius: 8px; margin-top: 10px; color: #00ff00; text-align: center; }
+        .btn-vider { background: linear-gradient(135deg, #ff4444, #880000); color: white; border: none; padding: 10px; border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; transition: 0.3s; }
+        .btn-vider:hover { transform: scale(1.02); box-shadow: 0 0 15px red; }
+        .btn-primary { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #1a1a2e;
+             padding: 12px 25px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+            width:450px }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,215,0,0.3); }
+        .btn-small { width: 100%; background: #ff4444; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer; margin-top: 5px; }
+        .btn-small:hover { opacity: 0.9; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: rgba(255,255,255,0.7); font-size: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px; outline: none; }
+        .form-group select option { background: #1a1a2e; }
+        .form-group input:focus, .form-group select:focus { border-color: #ffd700; }
+        .settings-form { background: rgba(255,255,255,0.04); border-radius: 16px; padding: 25px; margin-bottom: 30px; }
+        .chauffeurs-table { width: 100%; border-collapse: collapse; }
+        .chauffeurs-table th, .chauffeurs-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .chauffeurs-table th { color: #ffd700; font-weight: 600; }
+        .btn-edit { background: rgba(255,170,0,0.2); color: #ffaa00; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px; }
+        .btn-delete { background: rgba(255,68,68,0.2); color: #ff4444; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: #0f0f23; border-radius: 20px; padding: 40px; width: 90%; max-width: 900px; border: 1px solid rgba(255,215,0,0.3); }
+        .modal-content h3 { color: #ffd700; margin-bottom: 20px; font-size: 22px; }
+        .modal-buttons { display: flex; gap: 15px; margin-top: 25px; justify-content: flex-end; }
+        .btn-cancel { background: rgba(255,255,255,0.1); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-confirm { background: linear-gradient(135deg, #ff4444, #cc0000); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-save { background: linear-gradient(135deg, #015201, #008800); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .close-modal { float: right; font-size: 28px; font-weight: bold; cursor: pointer; color: #ffd700; }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 3000; }
+        .toast { background: #0f0f23; border-radius: 12px; padding: 15px 20px; margin-bottom: 10px; min-width: 280px; border-left: 4px solid; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 12px; }
+        .toast-success { border-left-color: #00ff00; }
+        .toast-error { border-left-color: #ff4444; }
+        .toast-warning { border-left-color: #ffaa00; }
+        .timestamp { margin-top: 15px; text-align: center; font-size: 11px; color: #666; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; }
+        
+        /* ========== STYLES SPÉCIFIQUES ÉCLAIRAGE ========== */
+        .eclairage-container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: space-between; }
+        .quartier-card { flex: 1; min-width: 350px; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; backdrop-filter: blur(5px); border: 1px solid rgba(255,215,0,0.2); }
+        .quartier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid; }
+        .quartier-A .quartier-header { border-bottom-color: #2ecc71; }
+        .quartier-B .quartier-header { border-bottom-color: #e74c3c; }
+        .quartier-title { font-size: 1.5em; font-weight: bold; }
+        .quartier-A .quartier-title { color: #2ecc71; }
+        .quartier-B .quartier-title { color: #e74c3c; }
+        .mode-badge { padding: 5px 15px; border-radius: 20px; font-size: 0.8em; }
+        .mode-nuit { background: #2c3e50; color: #3498db; }
+        .mode-jour { background: #f39c12; color: #fff; }
+        .leds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+        .led { text-align: center; }
+        .led-bulb { width: 60px; height: 60px; border-radius: 50%; margin: 5px auto; display: flex; align-items: center; justify-content: center; font-size: 1.5em; transition: 0.3s; }
+        .led-bulb.on100 { background: radial-gradient(circle, #ffff00, #ffaa00); box-shadow: 0 0 20px #ffaa00; color: #333; }
+        .led-bulb.on25 { background: radial-gradient(circle, #ffff88, #ffcc44); box-shadow: 0 0 10px #ffcc44; color: #333; opacity: 0.6; }
+        .led-bulb.off { background: #333; color: #666; }
+        .led-bulb.panne { background: #555; color: #ff4444; text-decoration: line-through; }
+        .led-label { font-size: 0.7em; }
+        .led-value { font-size: 0.6em; margin-top: 3px; color: #aaa; }
+        .panne-card { background: rgba(255,0,0,0.2); border: 2px solid #ff4444; border-radius: 10px; padding: 10px; margin: 10px 0; }
+        .panne-card.normal { background: rgba(0,255,0,0.1); border-color: #00ff00; }
+        .panne-texte { font-size: 0.8em; }
+        .boutons-eclairage { display: flex; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+        .btn-vert { background: linear-gradient(135deg, #00ff00, #008800); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-rouge { background: linear-gradient(135deg, #ff4444, #880000); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-success { background: #2ecc71; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-danger { background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-vert:hover, .btn-rouge:hover, .btn-success:hover, .btn-danger:hover { transform: scale(1.02); opacity: 0.9; }
+        .historique-mini { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 8px; max-height: 120px; overflow-y: auto; margin-top: 10px; font-size: 0.7rem; }
+        .event { padding: 4px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .event-time { color: #aaa; font-family: monospace; }
+        .event-action { color: #ffd700; }
+        
+        @media (max-width: 1024px) {
+            .sidebar { width: 80px; }
+            .sidebar .logo h2, .sidebar .nav-item span:not(.emoji), .sidebar .sidebar-title, .logout-btn span:not(.emoji) { display: none; }
+            .main-content { margin-left: 80px; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .grid-3 { grid-template-columns: 1fr; }
+            #regionsContainer { grid-template-columns: 1fr; }
+            .eclairage-container { flex-direction: column; }
+            .quartier-card { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modals -->
+    <div id="modalDelete" class="modal"><div class="modal-content"><h3>⚠️ Confirmation</h3><p id="deleteMessage">Êtes-vous sûr de vouloir supprimer ce chauffeur ?</p><div class="modal-buttons"><button class="btn-cancel" onclick="closeModal('modalDelete')">Annuler</button><button class="btn-confirm" id="confirmDeleteBtn">Supprimer</button></div></div></div>
+    <div id="modalEdit" class="modal"><div class="modal-content"><h3>Modifier le chauffeur</h3><input type="hidden" id="editUsername"><div class="form-group"><label>Email :</label><input type="email" id="editEmail"></div><div class="form-group"><label>Téléphone :</label><input type="text" id="editPhone"></div><div class="form-group"><label>Nouveau mot de passe :</label><input type="password" id="editPassword" placeholder="********"></div>
+        <!-- Champ texte pour les régions -->
+        <div class="form-group">
+            <label>Régions (séparées par des virgules) :</label>
+            <input type="text" id="editRegionsText" placeholder="ex: nord, sud, est" style="width:100%; padding:12px;">
+        </div>
+        <div class="modal-buttons"><button class="btn-cancel" onclick="closeModal('modalEdit')">Annuler</button><button class="btn-save" onclick="saveChauffeurEdit()">Enregistrer</button></div>
+    </div></div>
+    <div id="modalHistorique" class="modal"><div class="modal-content" style="max-width: 900px;"><span class="close-modal" onclick="closeModal('modalHistorique')">&times;</span><h3 id="historiqueTitle">📋 Historique des vidanges</h3><div id="historiqueTable" style="max-height: 500px; overflow-y: auto;"></div></div></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div>
+            <div class="logo"><h2>SMART SAFI</h2></div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-panel="dechets"><span>Gestion des déchets</span></div>
+                <div class="nav-item" data-panel="eau"><span>Suivi Qualité de l’eau</span></div>
+                <div class="nav-item" data-panel="air"><span>Suivi Qualité de l’air</span></div>
+                <div class="nav-item" data-panel="agriculture"><span>Irrigation intelligente</span></div>
+                <div class="nav-item" data-panel="eclairage"><span>Éclairage intelligent</span></div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">⚙️ PARAMÈTRES</div>
+                <div class="nav-item" data-panel="chauffeurs"><span class="emoji">👥</span><span>Gestion chauffeurs</span></div>
+                <div class="nav-item" data-panel="profile"><span class="emoji">👤</span><span>Mon profil</span></div>
+            </div>
+        </div>
+        <div class="nav-item" onclick="deconnexion()">
+            <span class="emoji">🚪</span>
+            <span>Déconnexion</span>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="header"><h1>Tableau de bord <span>Administrateur</span></h1></div>
+
+        <!-- STATS GLOBALES -->
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total poubelles</div></div>
+            <div class="stat-card"><div class="stat-value" id="statUrgence">0</div><div class="stat-label">Urgences</div></div>
+            <div class="stat-card"><div class="stat-value" id="statEau">--</div><div class="stat-label">Qualité eau</div></div>
+            <div class="stat-card"><div class="stat-value" id="statAir">--</div><div class="stat-label">Qualité air</div></div>
+            <div class="stat-card"><div class="stat-value" id="statAgri">--</div><div class="stat-label">Humidité sol</div></div>
+        </div>
+
+        <!-- PANEL DÉCHETS -->
+        <div id="panel-dechets" class="panel active">
+            <h2 class="panel-title">🗑️ Gestion des déchets</h2>
+            <div class="dechets-stats">
+                <div class="dechets-stat-card"><div class="dechets-stat-value" id="dechetsNormal">0</div><div class="dechets-stat-label">🟢 Normal</div></div>
+                <div class="dechets-stat-card"><div class="dechets-stat-value" id="dechetsAttention">0</div><div class="dechets-stat-label">🟡 Attention</div></div>
+                <div class="dechets-stat-card"><div class="dechets-stat-value" id="dechetsUrgence">0</div><div class="dechets-stat-label">🔴 Urgence</div></div>
+            </div>
+            <div class="dechets-map"><div id="dechetsMap" style="height: 450px;"></div></div>
+            <div style="display: flex; gap: 15px; justify-content: center; margin: 20px 0; align-items: center;">
+                <select id="camionTypeGlobal" style="padding: 8px 15px; border-radius: 8px; width: 450px; background: #333; color: white; border: none;">
+                    <option value="petit"> Petit camion </option>
+                    <option value="moyen" selected> Moyen camion </option>
+                    <option value="grand"> Grand camion </option>
+                </select>
+                <button id="btnEnvoyerCamionGlobal" class="btn-primary" style="background: #ff4444;"> ENVOYER CAMION </button>
+                <button id="btnHistoriqueGlobal" class="btn-primary" style="background: #2c3e50;"> Historique général</button>
+            </div>
+
+            <div id="regionsContainer"></div>
+        </div>
+
+        <!-- PANEL EAU -->
+        <div id="panel-eau" class="panel">
+            <h2 class="panel-title">💧 Qualité de l'eau</h2>
+            <div class="grid-3">
+                <div class="info-card"><h3>🌡️ pH</h3><div class="value" id="phValue">--</div><div id="phStatus" class="status-text"></div></div>
+                <div class="info-card"><h3>💨 Turbidité</h3><div class="value" id="turbValue">--</div><div id="turbStatus" class="status-text"></div></div>
+                <div class="info-card"><h3>⚡ Conductivité</h3><div class="value" id="condValue">--</div><div id="condStatus" class="status-text"></div></div>
+            </div>
+            <div class="info-card"><h3>🏆 Bilan qualité</h3><div id="eauConclusion" style="font-size: 24px; font-weight: 600;"></div></div>
+            <div id="problemesContainer" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- PANEL AIR -->
+        <div id="panel-air" class="panel">
+            <h2 class="panel-title">🌬️ Qualité de l'air</h2>
+            <div class="grid-3">
+                <div class="info-card"><h3>🌫️ PM2.5</h3><div class="value" id="pm25">--</div></div>
+                <div class="info-card"><h3>🌫️ PM10</h3><div class="value" id="pm10">--</div></div>
+                <div class="info-card"><h3>💨 O3</h3><div class="value" id="o3">--</div></div>
+                <div class="info-card"><h3>🏭 NO2</h3><div class="value" id="no2">--</div></div>
+                <div class="info-card"><h3>🏭 SO2</h3><div class="value" id="so2">--</div></div>
+                <div class="info-card"><h3>🔥 CO</h3><div class="value" id="co">--</div></div>
+            </div>
+            <div class="info-card"><h3>🏆 Indice global</h3><div id="airQualite" style="font-size: 20px;"></div></div>
+        </div>
+
+        <!-- PANEL AGRICULTURE -->
+        <div id="panel-agriculture" class="panel">
+            <h2 class="panel-title">🌱 Irrigation intelligente</h2>
+            <div class="grid-3">
+                <div class="info-card"><h3>🌡️ Température</h3><div class="value" id="temp">--</div></div>
+                <div class="info-card"><h3>💧 Humidité air</h3><div class="value" id="humAir">--</div></div>
+                <div class="info-card"><h3>🌱 Humidité sol</h3><div class="value" id="humSol">--</div></div>
+            </div>
+            <div class="info-card"><h3>📋 État</h3><div id="agriStatus"></div></div>
+        </div>
+
+        <!-- PANEL ÉCLAIRAGE -->
+        <div id="panel-eclairage" class="panel">
+            <h2 class="panel-title">💡 Éclairage intelligent - Quartiers A & B</h2>
+            <div class="eclairage-container">
+                <div class="quartier-card quartier-A" id="quartierACard">
+                    <div class="quartier-header">
+                        <span class="quartier-title">🏘️ Quartier A</span>
+                        <span class="mode-badge" id="modeA">🌙 NUIT</span>
+                    </div>
+                    <div id="panneCardA" class="panne-card normal">
+                        <div class="panne-texte" id="panneTexteA">✅ Système normal</div>
+                    </div>
+                    <div class="leds" id="ledsA"></div>
+                    <div class="historique-mini" id="historiqueA">
+                        <div class="event">⏳ En attente...</div>
+                    </div>
+                    <div style="font-size:0.7em; color:#aaa; text-align:center; margin-top:8px;">🎛️ 3 pots: J/N | Panne | Intensité</div>
+                </div>
+                <div class="quartier-card quartier-B" id="quartierBCard">
+                    <div class="quartier-header">
+                        <span class="quartier-title">🏘️ Quartier B</span>
+                        <span class="mode-badge" id="modeB">🌙 NUIT</span>
+                    </div>
+                    <div class="leds" id="ledsB"></div>
+                    <div class="historique-mini" id="historiqueB">
+                        <div class="event">⏳ En attente...</div>
+                    </div>
+                    <div style="font-size:0.7em; color:#aaa; text-align:center; margin-top:8px;">🎛️ 1 pot: Jour/Nuit</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL GESTION CHAUFFEURS (avec champ texte pour régions) -->
+        <div id="panel-chauffeurs" class="panel">
+            <h2 class="panel-title">👥 Gestion des chauffeurs</h2>
+            <div class="settings-form">
+                <h3 style="margin-bottom:20px; color:#ffd700;">➕ Ajouter un chauffeur</h3>
+                <div class="grid-2">
+                    <div class="form-group"><label>Nom d'utilisateur :</label><input type="text" id="newUsername" placeholder="ex: pierre.dupont"></div>
+                    <div class="form-group"><label>Mot de passe :</label><input type="password" id="newPassword" placeholder="********"></div>
+                    <div class="form-group"><label>Email :</label><input type="email" id="newEmail" placeholder="chauffeur@example.com"></div>
+                    <div class="form-group"><label>Téléphone :</label><input type="text" id="newPhone" placeholder="+212 6 XX XX XX XX"></div>
+                    <div class="form-group"><label>Rôle :</label><select id="newRole" onchange="toggleRegionsInput()"><option value="chauffeur" selected>Chauffeur</option><option value="admin">Admin</option></select></div>
+                </div>
+                <!-- Champ texte pour les régions -->
+                <div class="form-group">
+                    <label>Régions (séparées par des virgules) :</label>
+                    <input type="text" id="newRegionsText" placeholder="ex: nord, sud, est" style="width:100%; padding:12px;">
+                </div>
+                <button class="btn-primary" onclick="ajouterChauffeur()">AJOUTER L'UTILISATEUR</button>
+            </div>
+            <div class="info-card">
+                <h3>📋 Liste des chauffeurs</h3>
+                <table class="chauffeurs-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Régions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chauffeursList"><tr><td colspan="5">Chargement...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PANEL MON PROFIL -->
+        <div id="panel-profile" class="panel">
+            <h2 class="panel-title">👤 Mon profil</h2>
+            <div class="settings-form"><div class="grid-2"><div class="form-group"><label>Nom d'utilisateur</label><input type="text" id="profileUsername" value="admin" readonly style="background:rgba(0,0,0,0.5);"></div><div class="form-group"><label>Email</label><input type="email" id="profileEmail" placeholder="admin@smartsafi.ma"></div><div class="form-group"><label>Téléphone</label><input type="text" id="profilePhone" placeholder="+212 5 23 45 67 89"></div><div class="form-group"><label>Nouveau mot de passe</label><input type="password" id="profilePassword" placeholder="Laisser vide pour ne pas changer"></div></div><button class="btn-primary" onclick="updateProfil()">💾 SAUVEGARDER</button></div>
+        </div>
+
+        <div class="timestamp" id="timestamp">🕐 En attente des données...</div>
+    </div>
+
+    <script>
+        const socket = io();
+        let map, markers = {}, globalPoubellesData = [], currentDeleteUsername = null;
+
+        // ========== FONCTIONS COMMUNES ==========
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<div class="toast-icon">${type === 'success' ? '✅' : (type === 'error' ? '❌' : '⚠️')}</div><div class="toast-message">${message}</div><div class="toast-close" onclick="this.parentElement.remove()">✕</div>`;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function showPanel(panelId) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`panel-${panelId}`).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-panel') === panelId) item.classList.add('active');
+            });
+            if (panelId === 'dechets' && map) setTimeout(() => map.invalidateSize(), 100);
+            if (panelId === 'chauffeurs') chargerChauffeurs();
+        }
+
+        // ========== CARTE DÉCHETS ==========
+        function initMap() {
+            map = L.map('dechetsMap').setView([32.2833, -9.2333], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap | Safi' }).addTo(map);
+        }
+
+        function getIcone(poubelle) {
+            let niveau = poubelle.niveau, couleur = '#00ff00', taille = 32, emoji = '🗑️';
+            if (niveau >= 80) { couleur = '#ff0000'; taille = 44; }
+            else if (niveau >= 60) { couleur = '#ffaa00'; taille = 38; }
+            if (poubelle.type === 'VERRE') emoji = '🥤';
+            else if (poubelle.type === 'CARTON') emoji = '📦';
+            else if (poubelle.type === 'MENAGER') emoji = '🍌';
+            else if (poubelle.type === 'PAPIER') emoji = '📄';
+            return L.divIcon({ html: `<div style="background: ${couleur}; width: ${taille}px; height: ${taille}px; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 2px solid white;">${emoji}</div>`, iconSize: [taille, taille] });
+        }
+
+        function centrerCarte(lat, lng) { map.setView([lat, lng], 16); }
+
+        function afficherRegionsEtPoubelles(poubelles) {
+            globalPoubellesData = poubelles;
+            const container = document.getElementById('regionsContainer');
+            container.innerHTML = '';
+            const regions = { nord: 'Nord', sud: 'Sud', est: 'Est', ouest: 'Ouest' };
+            for (const [key, nom] of Object.entries(regions)) {
+                const rp = poubelles.filter(p => p.region === key);
+                const urg = rp.filter(p => p.niveau >= 80).length;
+                let items = '';
+                rp.forEach(p => {
+                    const niveauClass = p.niveau >= 80 ? 'urgence' : (p.niveau >= 60 ? 'attention' : 'normal');
+                    const barreClass = p.niveau >= 80 ? 'rouge' : (p.niveau >= 60 ? 'jaune' : 'vert');
+                    items += `<div class="poubelle-item ${niveauClass}" onclick="centrerCarte(${p.lat},${p.lng})">
+                        <div class="poubelle-header"><span class="poubelle-type">${p.type}</span><span>${p.niveau}%</span></div>
+                        <div class="barre"><div class="barre-fill ${barreClass}" style="width: ${p.niveau}%"></div></div>
+                        <div class="poubelle-odeur">👃 Odeur: ${p.odeur}%</div>
+                        <div class="poubelle-adresse">📍 ${p.adresse}</div>
+                        ${p.niveau>=80?'<div style="color:red;font-size:12px;">🔴 VIDAGE URGENT !</div>':''}
+                    </div>`;
+                });
+                const card = document.createElement('div');
+                card.className = 'region-card';
+                card.innerHTML = `<h3 style="color:#ffd700;">📍 ${nom} <span style="font-size:0.7rem;background:#333;padding:2px 8px;border-radius:20px;">${urg} urgence(s)</span></h3>${items}`;
+                container.appendChild(card);
+            }
+            Object.values(markers).forEach(m => map.removeLayer(m));
+            markers = {};
+            poubelles.forEach(p => {
+                markers[p.id] = L.marker([p.lat,p.lng],{icon:getIcone(p)}).bindPopup(`<b>${p.type}</b><br>${p.adresse}<br>📊 Niveau: ${p.niveau}%<br>👃 Odeur: ${p.odeur}%`).addTo(map);
+            });
+            const total = poubelles.length, urgent = poubelles.filter(p=>p.niveau>=80).length, attention = poubelles.filter(p=>p.niveau>=60&&p.niveau<80).length;
+            document.getElementById('dechetsNormal').innerHTML = total - urgent - attention;
+            document.getElementById('dechetsAttention').innerHTML = attention;
+            document.getElementById('dechetsUrgence').innerHTML = urgent;
+            document.getElementById('statTotal').innerHTML = total;
+            document.getElementById('statUrgence').innerHTML = urgent;
+        }
+
+        async function envoyerVidageGeneral() {
+            const camionType = document.getElementById('camionTypeGlobal').value;
+            showToast(`🚛 Camion ${camionType} envoyé`, 'success');
+        }
+
+        async function afficherHistoriqueGlobal() {
+            const resp = await fetch('/api/historique/vidange');
+            const data = await resp.json();
+            document.getElementById('historiqueTitle').innerHTML = '📋 Historique des vidanges - Général';
+            let html = '<table style="width:100%; border-collapse:collapse;"><tr><th>Date</th><th>Région</th><th>Camion</th><th>Poubelles vidées</th><th>Urgentes</th></tr>';
+            data.forEach(item => { html += `<tr><td>${item.date}</td><td>${item.region.toUpperCase()}</td><td>${item.camionType}</td><td>${item.nbPoubellesVidees}</td><td>${item.nbUrgentes}</td></tr>`; });
+            html += '</table>';
+            if (!data.length) html = '<p>Aucune vidange enregistrée.</p>';
+            document.getElementById('historiqueTable').innerHTML = html;
+            openModal('modalHistorique');
+        }
+
+        // ========== GESTION CHAUFFEURS (AVEC CHAMP TEXTE) ==========
+        function chargerChauffeurs() {
+            fetch('/api/chauffeurs').then(r => r.json()).then(data => {
+                let html = '';
+                data.forEach(c => {
+                    let regions = c.regions || [];
+                    let regionsStr = regions.length ? regions.join(', ') : 'Toutes';
+                    html += `<tr>
+                        <td>${c.username}</td>
+                        <td>${c.email || '-'}</td>
+                        <td>${c.telephone || '-'}</td>
+                        <td>${regionsStr}</td>
+                        <td>
+                            <button class="btn-edit" onclick='openEditModal("${c.username}","${c.email||''}","${c.telephone||''}","${regionsStr}")'>✏️</button>
+                            <button class="btn-delete" onclick="confirmDelete('${c.username}')">🗑️</button>
+                        </td>
+                    </tr>`;
+                });
+                if (!data.length) html = '<tr><td colspan="5">Aucun chauffeur</td></tr>';
+                document.getElementById('chauffeursList').innerHTML = html;
+            }).catch(err => console.error('Erreur chargement chauffeurs', err));
+        }
+
+        function openEditModal(username, email, phone, regionsStr) {
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPhone').value = phone;
+            document.getElementById('editPassword').value = '';
+            document.getElementById('editRegionsText').value = regionsStr === 'Toutes' ? '' : regionsStr;
+            openModal('modalEdit');
+        }
+
+        function saveChauffeurEdit() {
+            const username = document.getElementById('editUsername').value;
+            const email = document.getElementById('editEmail').value;
+            const telephone = document.getElementById('editPhone').value;
+            const password = document.getElementById('editPassword').value;
+            let regionsText = document.getElementById('editRegionsText').value.trim();
+            let regions = regionsText ? regionsText.split(',').map(r => r.trim().toLowerCase()).filter(r => r) : [];
+            fetch(`/api/chauffeurs/${username}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, telephone, password: password || undefined, regions })
+            }).then(r => r.json()).then(data => {
+                if (data.status === 'ok') {
+                    showToast('✅ Chauffeur modifié', 'success');
+                    closeModal('modalEdit');
+                    chargerChauffeurs();
+                } else showToast('❌ '+data.message, 'error');
+            }).catch(err => showToast('Erreur réseau', 'error'));
+        }
+
+        function confirmDelete(username) {
+            currentDeleteUsername = username;
+            document.getElementById('deleteMessage').innerHTML = `Supprimer le chauffeur <strong>${username}</strong> ?`;
+            openModal('modalDelete');
+        }
+
+        document.getElementById('confirmDeleteBtn').onclick = function() {
+            if (currentDeleteUsername) {
+                fetch(`/api/chauffeurs/${currentDeleteUsername}`, { method: 'DELETE' }).then(r => r.json()).then(data => {
+                    if (data.status === 'ok') { showToast('✅ Chauffeur supprimé', 'success'); closeModal('modalDelete'); chargerChauffeurs(); }
+                    else showToast('❌ '+data.message, 'error');
+                }).catch(() => showToast('Erreur réseau', 'error'));
+            }
+        };
+
+        function toggleRegionsInput() {
+            const role = document.getElementById('newRole').value;
+            const regionsInput = document.getElementById('newRegionsText');
+            if (role === 'chauffeur') {
+                regionsInput.disabled = false;
+                regionsInput.style.opacity = 1;
+            } else {
+                regionsInput.disabled = true;
+                regionsInput.style.opacity = 0.6;
+                regionsInput.value = '';
+            }
+        }
+
+        function ajouterChauffeur() {
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+            const role = document.getElementById('newRole').value;
+            if (!username || !password) { showToast('Remplir nom et mot de passe', 'warning'); return; }
+            let regionsText = document.getElementById('newRegionsText').value.trim();
+            let regions = regionsText ? regionsText.split(',').map(r => r.trim().toLowerCase()).filter(r => r) : [];
+            if (role !== 'chauffeur') regions = [];
+            fetch('/api/chauffeurs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    role,
+                    email: document.getElementById('newEmail').value,
+                    telephone: document.getElementById('newPhone').value,
+                    regions: regions
+                })
+            }).then(r => r.json()).then(data => {
+                if (data.status === 'ok') {
+                    showToast('✅ Utilisateur ajouté', 'success');
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('newPhone').value = '';
+                    document.getElementById('newRegionsText').value = '';
+                    document.getElementById('newRole').value = 'chauffeur';
+                    toggleRegionsInput();
+                    chargerChauffeurs();
+                } else showToast('❌ '+data.message, 'error');
+            }).catch(err => showToast('Erreur réseau', 'error'));
+        }
+
+        function updateProfil() {
+            fetch('/api/admin/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: document.getElementById('profileEmail').value, telephone: document.getElementById('profilePhone').value, password: document.getElementById('profilePassword').value || undefined }) })
+                .then(r => r.json()).then(data => { if (data.status === 'ok') { showToast('✅ Profil mis à jour', 'success'); document.getElementById('profilePassword').value = ''; } else showToast('❌ '+data.message, 'error'); });
+        }
+
+        function deconnexion() { window.location.href = '/logout'; }
+
+        // ========== FONCTIONS ÉCLAIRAGE ==========
+        function getPourcentage(valeur) {
+            if (valeur >= 200) return 100;
+            if (valeur >= 50) return 25;
+            return 0;
+        }
+
+        function updateLEDs(quartier, data, panneInfo) {
+            const container = document.getElementById(`leds${quartier}`);
+            if (!container) return;
+            const leds = [
+                {id: 1, valeur: data.led1, nom: 'GAUCHE'},
+                {id: 2, valeur: data.led2, nom: 'LED2'},
+                {id: 3, valeur: data.led3, nom: 'LED3'},
+                {id: 4, valeur: data.led4, nom: 'DROITE'}
+            ];
+            let html = '';
+            leds.forEach(led => {
+                const pourcent = getPourcentage(led.valeur);
+                let classe = 'off';
+                let icon = '⚫';
+                let estEnPanne = (panneInfo && panneInfo.active && panneInfo.led_grillee === led.id);
+                if (estEnPanne) { classe = 'panne'; icon = '❌'; }
+                else if (pourcent === 100) { classe = 'on100'; icon = '💡'; }
+                else if (pourcent === 25) { classe = 'on25'; icon = '💡'; }
+                let texte = estEnPanne ? 'PANNE' : (pourcent === 100 ? '100%' : (pourcent === 25 ? '25%' : '0%'));
+                html += `<div class="led"><div class="led-bulb ${classe}">${icon}</div><div class="led-label">LED${led.id}<br>(${led.nom})</div><div class="led-value">${texte}</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function updateMode(quartier, nuit) {
+            const modeElement = document.getElementById(`mode${quartier}`);
+            if (modeElement) {
+                if (nuit) {
+                    modeElement.innerHTML = "🌙 NUIT";
+                    modeElement.className = "mode-badge mode-nuit";
+                } else {
+                    modeElement.innerHTML = "☀️ JOUR";
+                    modeElement.className = "mode-badge mode-jour";
+                }
+            }
+        }
+
+        function updatePanneCard(quartier, panne) {
+            if (quartier !== 'A') return;
+            const card = document.getElementById('panneCardA');
+            const texte = document.getElementById('panneTexteA');
+            if (!card || !texte) return;
+            if (!panne.active || panne.niveau === 0) {
+                card.className = "panne-card normal";
+                texte.innerHTML = "✅ Système normal - Aucune panne";
+            } else if (panne.niveau === 1) {
+                card.className = "panne-card";
+                texte.innerHTML = "⚠️ PANNE LÉGÈRE - Intensité réduite de 50%";
+            } else if (panne.niveau === 2) {
+                card.className = "panne-card";
+                texte.innerHTML = `🔴 PANNE MOYENNE - LED${panne.led_grillee} est grillée !`;
+            } else {
+                card.className = "panne-card";
+                texte.innerHTML = "💀 PANNE GRAVE - Système défaillant !";
+            }
+        }
+
+        function ajouterEvenement(quartier, event) {
+            const container = document.getElementById(`historique${quartier}`);
+            if (!container) return;
+            const newEvent = document.createElement('div');
+            newEvent.className = 'event';
+            let actionHtml = event.action;
+            if (actionHtml.includes("PANNE")) actionHtml = `⚠️ ${actionHtml}`;
+            else if (actionHtml.includes("ALLUMAGE")) actionHtml = `🔆 ${actionHtml}`;
+            newEvent.innerHTML = `<span class="event-time">🕐 ${event.time}</span> <span class="event-action">${actionHtml}</span>`;
+            container.insertBefore(newEvent, container.firstChild);
+            while (container.children.length > 6) container.removeChild(container.lastChild);
+        }
+
+        function updateQuartierUI(quartier, data) {
+            if (!data) return;
+            updateMode(quartier, data.nuit);
+            const panne = (quartier === 'A') ? (data.panne || {active: false, niveau: 0, led_grillee: -1}) : null;
+            updateLEDs(quartier, data, panne);
+            if (quartier === 'A') updatePanneCard(quartier, panne);
+            if (data.historique && data.historique.length) {
+                const container = document.getElementById(`historique${quartier}`);
+                if (container) {
+                    container.innerHTML = '';
+                    data.historique.slice(0, 6).forEach(ev => ajouterEvenement(quartier, ev));
+                }
+            }
+        }
+
+        async function commanderEclairage(quartier, action) {
+            try {
+                const res = await fetch(`/api/commande/${quartier}/${action}`);
+                const data = await res.json();
+                if (data.status === 'ok') showToast(`Commande ${action} envoyée au quartier ${quartier}`, 'success');
+                else showToast('Erreur commande', 'error');
+            } catch(e) { showToast('Erreur réseau', 'error'); }
+        }
+
+        async function chargerEclairage() {
+            try {
+                const res = await fetch('/api/eclairage');
+                const data = await res.json();
+                if (data.A) updateQuartierUI('A', data.A);
+                if (data.B) updateQuartierUI('B', data.B);
+            } catch(e) { console.error('Erreur chargement éclairage', e); }
+        }
+
+        // ========== SOCKETS ==========
+        socket.on('connect', () => { console.log('✅ Socket.IO connecté'); document.getElementById('timestamp').innerHTML = '🟢 Connecté au serveur temps réel'; });
+        socket.on('dechets_update', (data) => { if (data.poubelles) afficherRegionsEtPoubelles(data.poubelles); if (data.derniere_maj) document.getElementById('timestamp').innerHTML = `🕐 Dernière mise à jour: ${data.derniere_maj}`; });
+        socket.on('eau_update', (data) => { updateEau(data); });
+        socket.on('air_update', (data) => { updateAir(data); });
+        socket.on('agriculture_update', (data) => { updateAgriculture(data); });
+        socket.on('maj_etat_A', (data) => { updateQuartierUI('A', data); });
+        socket.on('maj_evenement_A', (data) => { ajouterEvenement('A', data); });
+        socket.on('maj_etat_B', (data) => { updateQuartierUI('B', data); });
+        socket.on('maj_evenement_B', (data) => { ajouterEvenement('B', data); });
+
+        // ========== MISE À JOUR EAU, AIR, AGRICULTURE ==========
+        function updateEau(data) {
+            document.getElementById('phValue').innerHTML = data.pH?.toFixed(1) || '--';
+            document.getElementById('turbValue').innerHTML = data.turbidite?.toFixed(1) || '--';
+            document.getElementById('condValue').innerHTML = data.conductivite?.toFixed(0) || '--';
+            let phStatus = document.getElementById('phStatus');
+            if (phStatus) {
+                if (data.pH < 5.5 || data.pH > 9.5) phStatus.innerHTML = ' DANGER';
+                else if (data.pH < 6.5 || data.pH > 8.5) phStatus.innerHTML = ' ATTENTION';
+                else phStatus.innerHTML = '✅ NORMAL';
+            }
+            let turbStatus = document.getElementById('turbStatus');
+            if (turbStatus) {
+                if (data.turbidite > 5) turbStatus.innerHTML = ' DANGER';
+                else if (data.turbidite > 1) turbStatus.innerHTML = ' ATTENTION';
+                else turbStatus.innerHTML = '✅ NORMAL';
+            }
+            let condStatus = document.getElementById('condStatus');
+            if (condStatus) {
+                if (data.conductivite > 1000) condStatus.innerHTML = ' DANGER';
+                else if (data.conductivite > 600) condStatus.innerHTML = ' ATTENTION';
+                else condStatus.innerHTML = '✅ NORMAL';
+            }
+            document.getElementById('eauConclusion').innerHTML = `${data.icone} ${data.qualite_texte}`;
+            let pbDiv = document.getElementById('problemesContainer');
+            if (data.problemes && data.problemes.length) {
+                let html = '<div class="problemes"><strong>❌ PROBLÈMES DÉTECTÉS :</strong>';
+                data.problemes.forEach(p => html += `<div class="probleme-item">⚠️ ${p}</div>`);
+                html += '</div>';
+                pbDiv.innerHTML = html;
+            } else pbDiv.innerHTML = '<div class="ok-item">✅ TOUS LES PARAMÈTRES SONT NORMAUX ✅</div>';
+            document.getElementById('statEau').innerHTML = data.qualite_texte === 'POTABLE' ? 'Potable' : (data.qualite_texte === 'ATTENTION' ? ' Attention' : ' Danger');
+        }
+
+        function updateAir(data) {
+            document.getElementById('pm25').innerHTML = data.pm25?.toFixed(1) || '--';
+            document.getElementById('pm10').innerHTML = data.pm10?.toFixed(1) || '--';
+            document.getElementById('o3').innerHTML = data.o3?.toFixed(1) || '--';
+            document.getElementById('no2').innerHTML = data.no2?.toFixed(1) || '--';
+            document.getElementById('so2').innerHTML = data.so2?.toFixed(1) || '--';
+            document.getElementById('co').innerHTML = data.co?.toFixed(1) || '--';
+            document.getElementById('airQualite').innerHTML = data.qualite_texte || '--';
+            document.getElementById('statAir').innerHTML = data.qualite_texte || '--';
+        }
+
+        function updateAgriculture(data) {
+            document.getElementById('temp').innerHTML = data.temperature?.toFixed(1) || '--';
+            document.getElementById('humAir').innerHTML = data.humidite_air?.toFixed(0) || '--';
+            document.getElementById('humSol').innerHTML = data.humidite_sol?.toFixed(0) || '--';
+            let status = (data.humidite_sol || 0) < 30 ? '🔴 Sol sec - Arrosage nécessaire' : '🟢 Sol humide - OK';
+            document.getElementById('agriStatus').innerHTML = status;
+            document.getElementById('statAgri').innerHTML = (data.humidite_sol?.toFixed(0) || '--') + '%';
+        }
+
+        // ========== Polling ==========
+        function refreshAll() {
+            fetch('/api/eau').then(r=>r.json()).then(updateEau).catch(e=>console.error);
+            fetch('/api/air').then(r=>r.json()).then(updateAir).catch(e=>console.error);
+            fetch('/api/agriculture').then(r=>r.json()).then(updateAgriculture).catch(e=>console.error);
+            chargerEclairage();
+        }
+
+        // ========== INITIALISATION ==========
+        document.getElementById('btnEnvoyerCamionGlobal').onclick = envoyerVidageGeneral;
+        document.getElementById('btnHistoriqueGlobal').onclick = afficherHistoriqueGlobal;
+        document.querySelectorAll('.nav-item[data-panel]').forEach(item => {
+            item.addEventListener('click', () => showPanel(item.getAttribute('data-panel')));
+        });
+        initMap();
+        fetch('/api/dechets').then(r=>r.json()).then(data => { if(data.poubelles) afficherRegionsEtPoubelles(data.poubelles); });
+        chargerChauffeurs();
+        chargerEclairage();
+        refreshAll();
+        setInterval(refreshAll, 5000);
+    </script>
+</body>
+</html>

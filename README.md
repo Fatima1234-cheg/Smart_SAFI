@@ -1,540 +1,356 @@
-# SmartSafi - Smart City Management Platform
+<div align="center">
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Flask 2.3+](https://img.shields.io/badge/flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
-[![MongoDB](https://img.shields.io/badge/mongodb-4.0+-yellow.svg)](https://www.mongodb.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+# 🌊 SmartSafi
 
-SmartSafi est une plateforme de gestion de ville intelligente (Smart City) conçue pour la ville de Safi, Maroc. Elle intègre la gestion des déchets, la qualité de l'eau, la qualité de l'air, l'agriculture intelligente et l'éclairage public.
+### La ville qui se comprend, s'anticipe et s'optimise.
 
----
+**Plateforme Smart City open source pour Safi (Maroc) : une seule vue sur les déchets, l'eau, l'air, l'agriculture et l'éclairage, avec un moteur qui relie les données entre elles.**
 
-## Sommaire
+[![Python](https://img.shields.io/badge/python-3.8+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/flask-2.3+-000000?logo=flask)](https://flask.palletsprojects.com/)
+[![MongoDB](https://img.shields.io/badge/mongodb-4.0+-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![MQTT](https://img.shields.io/badge/mqtt-IoT--ready-660066?logo=eclipsemosquitto)](https://mqtt.org/)
 
-- [Caractéristiques](#caractéristiques)
-- [Architecture Technique](#architecture-technique)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Structure du Projet](#structure-du-projet)
-- [API Endpoints](#api-endpoints)
-- [MQTT Topics](#mqtt-topics)
-- [Tests](#tests)
-- [Déploiement](#déploiement)
-- [Contribution](#contribution)
-- [Licence](#licence)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-contribuer)
+
+[Démarrage en 2 minutes](#-démarrage-en-2-minutes) ·
+[Innovation](#-ce-qui-rend-smartsafi-différent) ·
+[Architecture](#-architecture) ·
+[API](#-api) ·
+[Roadmap](#-roadmap)
+
+</div>
 
 ---
 
-## Caractéristiques
+## 🎯 Le problème
 
-### Modules Smart City
+Dans la plupart des villes, chaque service tourne en silo : la collecte des déchets ne parle pas à la qualité de l'air, l'éclairage ignore la fréquentation, l'irrigation ignore la ressource en eau. Résultat : des décisions locales, réactives, et coûteuses.
 
-- **Gestion des Déchets** : Suivi des poubelles connectées dans 4 régions (Nord, Sud, Est, Ouest)
-- **Qualité de l'Eau** : Surveillance du pH, turbidité, conductivité et température
-- **Qualité de l'Air** : Mesure des polluants (PM2.5, PM10, O3, NO2, SO2, CO)
-- **Agriculture Intelligente** : Capteurs de sol (humidité, température, pH, NPK)
-- **Éclairage Public** : Gestion intelligente des lampadaires LED dans 2 quartiers
+**SmartSafi part de l'idée inverse :** les données urbaines sont plus utiles *ensemble* que séparées.
 
-### Fonctionnalités Générales
-
-- **Authentification sécurisée** : JWT + sessions Flask-Login
-- **Tableaux de bord interactifs** : Visualisation en temps réel avec Chart.js
-- **Cartographie** : Cartes interactives avec Leaflet.js
-- **Communication IoT** : MQTT pour la communication temps réel
-- **Notifications** : Alertes email et notifications push
-- **API RESTful** : API complète pour l'intégration tierce
-- **Gestion des utilisateurs** : Rôles (admin, driver, operator, viewer)
+| Sans SmartSafi | Avec SmartSafi |
+|---|---|
+| Tournées de collecte à horaires fixes | Tournées calculées selon le remplissage réel |
+| Alertes qualité d'eau après plainte | Détection d'anomalie avant dégradation |
+| Lampadaires allumés à pleine puissance | Intensité adaptée au contexte |
+| 5 outils, 5 tableaux de bord | 1 plateforme, 1 carte, 1 API |
 
 ---
 
-## Architecture Technique
+## 🧩 Les 5 modules
 
-### Stack Technologique
+| Module | Ce qu'il mesure | Capteurs / données |
+|---|---|---|
+| ♻️ **Déchets** | Remplissage, statut, position | 4 zones : Nord, Sud, Est, Ouest |
+| 💧 **Eau** | Qualité en continu | pH, turbidité, conductivité, température |
+| 🌫️ **Air** | Polluants atmosphériques | PM2.5, PM10, O₃, NO₂, SO₂, CO |
+| 🌱 **Agriculture** | État du sol | Humidité, température, pH, NPK |
+| 💡 **Éclairage** | État et consommation LED | 2 quartiers, gradation à distance |
 
-| Couche | Technologie |
-|--------|-------------|
-| **Backend** | Python 3.8+, Flask 2.3+ |
-| **Base de données** | MongoDB 4.0+ |
-| **ODM** | Flask-PyMongo |
-| **Authentification** | Flask-Login, JWT |
-| **Formulaires** | Flask-WTF, WTForms |
-| **Email** | Flask-Mail |
-| **Limitation de taux** | Flask-Limiter |
-| **MQTT** | Paho-MQTT |
-| **Frontend** | HTML5, CSS3, JavaScript |
-| **CSS Framework** | Bootstrap 5 |
-| **Icons** | Font Awesome 6 |
-| **Charts** | Chart.js 3+ |
-| **Maps** | Leaflet.js |
-| **JS Utilities** | jQuery 3.6+ |
+---
 
-### Diagramme d'Architecture
+## 💡 Ce qui rend SmartSafi différent
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT                                   │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │   Web UI    │  │ Mobile App  │  │    Third-party API    │  │
-│  │  (Browser)  │  │  (Future)   │  │       Clients         │  │
-│  └──────┬──────┘  └──────┬──────┘  └───────────┬───────────┘  │
-└─────────┼────────────────┼───────────────────────┼──────────────┘
-          │                │                       │
-          └────────────────┴───────────────────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │    Nginx/Apache    │
-                    │  (Reverse Proxy)   │
-                    └─────────┬──────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          │                   │                   │
-   ┌──────▼──────┐   ┌────────▼───────┐  ┌──────▼──────┐
-   │   Flask     │   │   Flask        │  │   Flask     │
-   │   App 1     │   │   App 2        │  │   App N     │
-   │  (Gunicorn) │   │   (Gunicorn)   │  │  (Gunicorn) │
-   └──────┬──────┘   └────────┬───────┘  └──────┬──────┘
-          │                   │                  │
-          └───────────────────┴──────────────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │      MongoDB       │
-                    │   (Primary-Replica) │
-                    │     Cluster         │
-                    └─────────┬──────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          │                   │                   │
-   ┌──────▼──────┐   ┌────────▼───────┐  ┌──────▼──────┐
-   │   MQTT      │   │   Redis        │  │   External  │
-   │   Broker    │   │   (Cache)      │  │   Services  │
-   │(Mosquitto)   │   │                │  │  (Email, SMS)│
-   └─────────────┘   └────────────────┘  └─────────────┘
+> Cette section décrit la **vision d'ingénierie** du projet. Chaque piste est rattachée à la [roadmap](#-roadmap) avec son niveau de maturité.
+
+### 1. Moteur de corrélation inter-domaines
+
+Le cœur de l'innovation : un moteur de règles qui croise les modules au lieu de les traiter isolément.
+
+```mermaid
+flowchart LR
+    A[🌫️ Pic PM10] --> R{Moteur de<br/>corrélation}
+    B[🌱 Sol très sec] --> R
+    C[♻️ Bennes pleines<br/>zone Est] --> R
+    R --> X1[Alerte : poussière<br/>d'origine agricole probable]
+    R --> X2[Recommandation :<br/>irriguer en priorité]
+    R --> X3[Replanifier la tournée<br/>hors heures de pic]
 ```
 
+Exemples de règles :
+
+- *Air dégradé + éclairage faible → augmenter l'intensité sur les axes concernés.*
+- *Bennes > 80 % + pic de pollution → décaler la collecte pour limiter l'exposition des agents.*
+- *Turbidité en hausse + humidité du sol élevée → suspicion de ruissellement, notifier l'opérateur eau.*
+
+### 2. Collecte prédictive plutôt que planifiée
+
+Chaque benne apprend son propre rythme de remplissage (jour de semaine, saison, événements). Le service d'optimisation calcule alors **quelles bennes vider, dans quel ordre, avec quel trajet**, plutôt que de faire passer un camion devant des bennes à moitié vides.
+
+### 3. Détection d'anomalies à la source (edge-first)
+
+Les capteurs publient en MQTT ; une première validation (plage physique, dérive, valeur figée) est faite **avant** l'écriture en base. On distingue ainsi une vraie alerte d'un capteur défaillant, ce qui réduit fortement les fausses alarmes.
+
+### 4. Indice de Résilience Urbaine (IRU)
+
+Un score synthétique par zone, calculé à partir des cinq modules, pour comparer des quartiers et suivre l'effet des décisions dans le temps.
+
+```
+IRU(zone) = Σ ( poids_module × score_normalisé_module )   →   0 à 100
+```
+
+Les poids sont configurables : une commune agricole et une zone portuaire n'ont pas les mêmes priorités.
+
+### 5. Jumeau numérique léger
+
+Rejouer l'historique pour répondre à « que se serait-il passé si… ? » : simuler un changement de fréquence de collecte, une baisse d'intensité d'éclairage, ou une panne de capteurs, **sans toucher à la production**.
+
+### 6. Open data par conception
+
+Toute donnée non sensible est exposée en API ouverte et exportable (CSV/JSON), pour les chercheurs, les étudiants et les associations. La ville devient une plateforme, pas une boîte noire.
+
 ---
 
-## Installation
+## 🚀 Démarrage en 2 minutes
 
-### Prérequis
+### Option A : Docker (recommandé)
+
+```bash
+git clone https://github.com/<votre-org>/smartsafi.git
+cd smartsafi
+cp .env.example .env
+docker-compose up -d
+```
+
+Ouvrez **http://localhost:5000**.
+
+### Option B : installation locale
+
+```bash
+python -m venv venv && source venv/bin/activate     # Windows : venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+flask init-db
+flask create-admin --username admin --email admin@example.com
+python run.py
+```
+
+### Vérifier que tout fonctionne
+
+```bash
+curl http://localhost:5000/api/v1/waste     # liste des poubelles
+pytest -q                                    # suite de tests
+```
+
+<details>
+<summary><b>Prérequis</b></summary>
 
 - Python 3.8+
 - MongoDB 4.0+
-- Node.js 14+ (pour les outils de build frontend)
-- Git
-
-### Installation locale
-
-1. **Cloner le repository**
-
-```bash
-git clone https://github.com/votre-org/smartsafi.git
-cd smartsafi
-```
-
-2. **Créer un environnement virtuel**
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
-```
-
-3. **Installer les dépendances**
-
-```bash
-# Installation de base
-pip install -r requirements.txt
-
-# Pour le développement
-pip install -r requirements-dev.txt
-```
-
-4. **Configurer les variables d'environnement**
-
-```bash
-# Copier le fichier d'exemple
-cp .env.example .env
-
-# Éditer .env avec vos paramètres
-nano .env
-```
-
-5. **Initialiser la base de données**
-
-```bash
-# Créer les collections et index
-flask init-db
-
-# Créer un administrateur
-flask create-admin --username admin --email admin@smartsafi.com
-```
-
-6. **Lancer l'application**
-
-```bash
-# Mode développement
-python run.py
-
-# Ou avec Flask CLI
-flask run --debug
-
-# Mode production
-python wsgi.py
-```
-
-L'application sera accessible à `http://localhost:5000`
+- Broker MQTT (Mosquitto) pour les capteurs réels
+- Node.js 14+ uniquement pour les outils de build frontend
+</details>
 
 ---
 
-## Configuration
+##  Architecture
 
-### Variables d'environnement principales
+```mermaid
+flowchart TB
+    subgraph Terrain
+        S1[Capteurs déchets]
+        S2[Capteurs eau / air]
+        S3[Sol & éclairage]
+    end
+    S1 & S2 & S3 -->|MQTT| B[(Broker Mosquitto)]
+    B --> V[Validation & détection d'anomalies]
+    V --> DB[(MongoDB)]
+    DB --> C[Moteur de corrélation]
+    DB --> O[Service d'optimisation]
+    C --> N[Notifications<br/>email / push]
+    DB --> API[API REST Flask]
+    C --> API
+    O --> API
+    API --> UI[Tableaux de bord<br/>Chart.js + Leaflet]
+    API --> EXT[Clients tiers / Open data]
+```
 
-| Variable | Description | Défaut |
-|----------|-------------|---------|
-| `FLASK_ENV` | Environnement Flask | `development` |
-| `SECRET_KEY` | Clé secrète Flask | **Requis en prod** |
-| `MONGO_URI` | URI MongoDB | `mongodb://localhost:27017/smartsafi` |
-| `MQTT_BROKER_HOST` | Hôte MQTT | `localhost` |
-| `MQTT_BROKER_PORT` | Port MQTT | `1883` |
-| `MAIL_SERVER` | Serveur SMTP | - |
-| `MAIL_PORT` | Port SMTP | `587` |
-| `MAIL_USERNAME` | Email expéditeur | - |
-| `MAIL_PASSWORD` | Mot de passe email | - |
+### Flux d'une mesure, de bout en bout
 
-### Configuration par environnement
+```mermaid
+sequenceDiagram
+    participant Capteur
+    participant MQTT
+    participant Service as mqtt_service
+    participant Mongo as MongoDB
+    participant Moteur as Corrélation
+    participant Opérateur
+    Capteur->>MQTT: smartsafi/water/ph-01/ph = 9.4
+    MQTT->>Service: message
+    Service->>Service: validation + anomalie ?
+    Service->>Mongo: mesure + indicateur de confiance
+    Mongo->>Moteur: nouvelle donnée
+    Moteur-->>Opérateur: alerte (si règle déclenchée)
+```
 
-**Développement** (`config/development.py`):
-- Debug activé
-- Base de données locale
-- Emails simulés
-- Logging verbeux
+### Stack
 
-**Production** (`config/production.py`):
-- Debug désactivé
-- HTTPS obligatoire
-- Rate limiting activé
-- Logging structuré
+| Couche | Technologies |
+|---|---|
+| Backend | Python, Flask, Gunicorn |
+| Données | MongoDB, Flask-PyMongo |
+| Sécurité | Flask-Login, JWT, Flask-WTF, Flask-Limiter |
+| Temps réel | Paho-MQTT, Mosquitto |
+| Frontend | Bootstrap 5, Chart.js, Leaflet, jQuery |
+| Notifications | Flask-Mail |
 
-**Test** (`config/testing.py`):
-- Base de données en mémoire
-- Services externes mockés
-- Couverture de code
+### Décisions d'architecture (ADR)
+
+| # | Décision | Pourquoi |
+|---|---|---|
+| 1 | **MongoDB** plutôt que SQL | Mesures hétérogènes par capteur, schéma évolutif |
+| 2 | **MQTT** plutôt que HTTP pour l'IoT | Léger, bas débit, adapté aux capteurs sur batterie |
+| 3 | **Application Factory** Flask | Configs dev / prod / test isolées, tests plus simples |
+| 4 | **Un blueprint par domaine** | Un module = une équipe possible, ajout sans régression |
+| 5 | **API d'abord** | L'interface web n'est qu'un client parmi d'autres |
 
 ---
 
-## Structure du Projet
+## 🔌 API
 
-```
-smartsafi/
-├── app/                          # Application Flask
-│   ├── __init__.py              # Application Factory
-│   ├── models/                  # Modèles MongoDB
-│   │   ├── __init__.py
-│   │   ├── user.py
-│   │   ├── waste.py
-│   │   ├── water.py
-│   │   ├── air.py
-│   │   ├── agriculture.py
-│   │   ├── lighting.py
-│   │   └── history.py
-│   ├── routes/                  # Blueprints
-│   │   ├── __init__.py
-│   │   ├── main.py
-│   │   ├── auth.py
-│   │   ├── dashboard.py
-│   │   ├── api.py
-│   │   ├── waste.py
-│   │   ├── water.py
-│   │   ├── air.py
-│   │   ├── agriculture.py
-│   │   ├── lighting.py
-│   │   └── history.py
-│   ├── services/                # Services métier
-│   │   ├── __init__.py
-│   │   ├── mqtt_service.py
-│   │   ├── optimization_service.py
-│   │   └── notification_service.py
-│   ├── utils/                   # Utilitaires
-│   │   ├── __init__.py
-│   │   ├── data_store.py
-│   │   ├── decorators.py
-│   │   └── validators.py
-│   ├── templates/               # Templates HTML
-│   │   ├── layouts/
-│   │   ├── partials/
-│   │   └── pages/
-│   └── static/                  # Fichiers statiques
-│       ├── css/
-│       ├── js/
-│       └── img/
-├── config/                      # Configurations
-│   ├── __init__.py
-│   ├── base.py
-│   ├── development.py
-│   ├── production.py
-│   └── testing.py
-├── tests/                       # Tests
-│   ├── __init__.py
-│   ├── conftest.py
-│   ├── test_auth.py
-│   ├── test_api.py
-│   └── test_models.py
-├── docs/                        # Documentation
-│   ├── architecture.md
-│   └── api.md
-├── scripts/                     # Scripts utilitaires
-│   ├── setup.sh
-│   ├── setup.bat
-│   └── backup.sh
-├── logs/                        # Logs (créé automatiquement)
-├── .env.example                 # Exemple de variables d'environnement
-├── .gitignore                   # Fichiers ignorés par Git
-├── requirements.txt             # Dépendances de base
-├── requirements-dev.txt         # Dépendances développement
-├── requirements-prod.txt        # Dépendances production
-├── run.py                       # Point d'entrée développement
-└── wsgi.py                      # Point d'entrée production
+Base : `/api/v1` · Documentation interactive : `/api/docs`
+
+```bash
+# Lire une poubelle
+curl -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/v1/waste/bin_001
 ```
 
----
+| Ressource | GET | POST | PUT | DELETE |
+|---|:-:|:-:|:-:|:-:|
+| `/waste` | ✅ | ✅ | ✅ | ✅ |
+| `/water` | ✅ | ✅ | ✅ | ✅ |
+| `/air` | ✅ | ✅ | ✅ | ✅ |
+| `/agriculture` | ✅ | ✅ | ✅ | ✅ |
+| `/lighting` | ✅ | ✅ | ✅ | ✅ |
 
-## API Endpoints
+**Rôles :** `admin` · `operator` · `driver` · `viewer`
 
-### Authentification
-
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/auth/login` | Connexion utilisateur |
-| POST | `/auth/logout` | Déconnexion |
-| POST | `/auth/register` | Inscription (admin seulement) |
-| POST | `/auth/password` | Changement de mot de passe |
-
-### Dashboard
-
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/dashboard` | Tableau de bord principal |
-| GET | `/dashboard/stats` | Statistiques globales |
-
-### API V1
-
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/api/v1/waste` | Liste des poubelles |
-| POST | `/api/v1/waste` | Créer une poubelle |
-| GET | `/api/v1/waste/:id` | Détails d'une poubelle |
-| PUT | `/api/v1/waste/:id` | Mettre à jour une poubelle |
-| DELETE | `/api/v1/waste/:id` | Supprimer une poubelle |
-
-... et plus pour water, air, agriculture, lighting
-
-### Documentation API
-
-La documentation complète de l'API est disponible à `/api/docs` quand l'application est en cours d'exécution.
-
----
-
-## MQTT Topics
-
-### Structure des Topics
+### Convention MQTT
 
 ```
-smartsafi/{domain}/{action}/{id}
+smartsafi/{domaine}/{id_capteur}/{mesure}
 ```
-
-### Topics par Domaine
-
-#### Waste Management
-```
-smartsafi/waste/+/fill_level    # Niveau de remplissage
-smartsafi/waste/+/status        # Statut de la poubelle
-smartsafi/waste/+/location      # Position GPS
-smartsafi/waste/command/collect # Commande de collecte
-```
-
-#### Water Quality
-```
-smartsafi/water/+/ph            # Niveau de pH
-smartsafi/water/+/turbidity     # Turbidité
-smartsafi/water/+/conductivity  # Conductivité
-smartsafi/water/+/temperature   # Température
-```
-
-#### Air Quality
-```
-smartsafi/air/+/pm25            # Particules PM2.5
-smartsafi/air/+/pm10            # Particules PM10
-smartsafi/air/+/o3              # Ozone
-smartsafi/air/+/no2             # Dioxyde d'azote
-smartsafi/air/+/so2             # Dioxyde de soufre
-smartsafi/air/+/co              # Monoxyde de carbone
-```
-
-#### Agriculture
-```
-smartsafi/agriculture/+/soil_moisture   # Humidité du sol
-smartsafi/agriculture/+/soil_temperature # Température du sol
-smartsafi/agriculture/+/soil_ph         # pH du sol
-smartsafi/agriculture/+/npk_n           # Azote
-smartsafi/agriculture/+/npk_p           # Phosphore
-smartsafi/agriculture/+/npk_k           # Potassium
-```
-
-#### Lighting
-```
-smartsafi/lighting/+/status       # Statut du lampadaire
-smartsafi/lighting/+/intensity   # Intensité lumineuse
-smartsafi/lighting/+/energy      # Consommation d'énergie
-smartsafi/lighting/command/dim   # Commande de gradation
-smartsafi/lighting/command/on    # Allumer
-smartsafi/lighting/command/off   # Éteindre
-```
-
-### Format des Messages
 
 ```json
 {
-  "timestamp": "2024-01-15T10:30:00Z",
+  "timestamp": "2026-01-15T10:30:00Z",
   "device_id": "bin_001",
   "value": 0.75,
-  "unit": "percentage",
+  "unit": "ratio",
   "battery": 85,
   "signal_strength": -65
 }
 ```
 
+<details>
+<summary><b>Tous les topics par domaine</b></summary>
+
+| Domaine | Topics |
+|---|---|
+| Déchets | `fill_level` · `status` · `location` · `command/collect` |
+| Eau | `ph` · `turbidity` · `conductivity` · `temperature` |
+| Air | `pm25` · `pm10` · `o3` · `no2` · `so2` · `co` |
+| Agriculture | `soil_moisture` · `soil_temperature` · `soil_ph` · `npk_n` · `npk_p` · `npk_k` |
+| Éclairage | `status` · `intensity` · `energy` · `command/dim` · `command/on` · `command/off` |
+</details>
+
 ---
 
-## Tests
-
-### Exécuter les tests
-
-```bash
-# Tous les tests
-pytest
-
-# Tests spécifiques
-pytest tests/test_auth.py
-pytest tests/test_api.py
-pytest tests/test_models.py
-
-# Avec couverture
-pytest --cov=app tests/
-
-# En mode verbeux
-pytest -v
-
-# Tests spécifiques par nom
-pytest -k "test_login"
-```
-
-### Structure des tests
+## 📁 Structure du projet
 
 ```
-tests/
-├── conftest.py          # Fixtures pytest
-├── test_auth.py         # Tests d'authentification
-├── test_api.py          # Tests API
-├── test_models.py       # Tests des modèles
-├── test_forms.py        # Tests des formulaires
-└── test_services.py     # Tests des services
-```
-
-### Fixtures principales
-
-```python
-# conftest.py
-import pytest
-from app import create_app
-from app.models import User
-
-@pytest.fixture
-def app():
-    """Application de test."""
-    app = create_app('testing')
-    with app.app_context():
-        yield app
-
-@pytest.fixture
-def client(app):
-    """Client de test."""
-    return app.test_client()
-
-@pytest.fixture
-def admin_user(app):
-    """Utilisateur admin de test."""
-    return User.create(
-        username='admin_test',
-        email='admin@test.com',
-        password='password123',
-        role='admin'
-    )
+smartsafi/
+├── app/
+│   ├── models/        # un modèle par domaine (waste, water, air, ...)
+│   ├── routes/        # blueprints : auth, dashboard, api, modules
+│   ├── services/      # mqtt, optimisation, notifications
+│   ├── utils/         # validators, decorators, data_store
+│   ├── templates/     # layouts / partials / pages
+│   └── static/        # css, js, img
+├── config/            # base, development, production, testing
+├── tests/             # auth, api, models, forms, services
+├── docs/              # architecture.md, api.md
+├── scripts/           # setup, backup
+├── run.py             # entrée développement
+└── wsgi.py            # entrée production
 ```
 
 ---
 
-## Déploiement
+## ⚙️ Configuration
 
-### Déploiement avec Docker
+| Variable | Rôle | Défaut |
+|---|---|---|
+| `FLASK_ENV` | Environnement | `development` |
+| `SECRET_KEY` | Clé secrète | **obligatoire en prod** |
+| `MONGO_URI` | Connexion MongoDB | `mongodb://localhost:27017/smartsafi` |
+| `MQTT_BROKER_HOST` / `PORT` | Broker MQTT | `localhost` / `1883` |
+| `MAIL_SERVER` / `PORT` | SMTP | `-` / `587` |
+| `MAIL_USERNAME` / `PASSWORD` | Identifiants SMTP | `-` |
+
+---
+
+##  Sécurité & confidentialité
+
+- Authentification **JWT + sessions**, mots de passe hachés, rôles à privilèges minimaux.
+- **Rate limiting** sur les routes sensibles (connexion, API).
+- HTTPS obligatoire en production, `DEBUG` désactivé.
+- Secrets uniquement via variables d'environnement, jamais dans le dépôt.
+- Les données exposées en open data sont **agrégées et non nominatives**.
+
+---
+
+##  Qualité
 
 ```bash
-# Construire l'image
-docker build -t smartsafi:latest .
-
-# Exécuter le conteneur
-docker run -d \
-  -p 5000:5000 \
-  -e MONGO_URI=mongodb://mongo:27017/smartsafi \
-  -e SECRET_KEY=your-secret-key \
-  --name smartsafi \
-  smartsafi:latest
+pytest                      # tous les tests
+pytest --cov=app tests/     # avec couverture
+flake8 && pylint app        # lint
 ```
 
-### Déploiement avec Docker Compose
+Objectif de couverture : **> 80 %**. Style : PEP 8, docstrings Google-style.
+
+---
+
+##  Roadmap
+
+| Horizon | Chantier | Maturité |
+|---|---|---|
+| **Maintenant** | 5 modules, API REST, MQTT, tableaux de bord, cartes | 🟢 Socle |
+| **Court terme** | Validation d'anomalies à l'ingestion | 🟡 À formaliser |
+| **Court terme** | Notifications multi-canaux (email, push, SMS) | 🟡 En cours |
+| **Moyen terme** | Moteur de corrélation inter-domaines | 🔵 Conception |
+| **Moyen terme** | Collecte prédictive (prévision de remplissage) | 🔵 Conception |
+| **Moyen terme** | Indice de Résilience Urbaine (IRU) | 🔵 Conception |
+| **Long terme** | Jumeau numérique et simulation « what-if » | ⚪ Exploration |
+| **Long terme** | Application mobile pour agents de terrain | ⚪ Exploration |
+| **Long terme** | Portail open data public | ⚪ Exploration |
+
+> 🟢 disponible · 🟡 en cours · 🔵 conçu · ⚪ idée
+
+---
+
+##  Déploiement
+
+<details>
+<summary><b>Docker Compose</b></summary>
 
 ```bash
-# Démarrer tous les services
 docker-compose up -d
-
-# Voir les logs
 docker-compose logs -f app
-
-# Arrêter
 docker-compose down
 ```
+</details>
 
-### Déploiement manuel sur serveur
+<details>
+<summary><b>Serveur classique (Gunicorn + Nginx)</b></summary>
 
 ```bash
-# 1. Cloner le code
-git clone https://github.com/votre-org/smartsafi.git
-cd smartsafi
-
-# 2. Créer l'environnement virtuel
-python3 -m venv venv
-source venv/bin/activate
-
-# 3. Installer les dépendances
 pip install -r requirements-prod.txt
-
-# 4. Configurer les variables d'environnement
-cp .env.example .env
-nano .env  # Éditer les valeurs
-
-# 5. Initialiser la base de données
-flask init-db
-flask create-admin
-
-# 6. Démarrer avec Gunicorn
+flask init-db && flask create-admin
 gunicorn -w 4 -b 0.0.0.0:8000 wsgi:application
 ```
-
-### Configuration Nginx
 
 ```nginx
 server {
@@ -555,53 +371,63 @@ server {
     }
 }
 ```
+</details>
 
 ---
 
-## Contribution
+##  FAQ
 
-Les contributions sont les bienvenues ! Veuillez suivre ces étapes :
+**Faut-il de vrais capteurs pour tester ?**
+Non. Les données de démonstration et un publieur MQTT simulé suffisent pour explorer toute la plateforme.
 
-1. Forker le projet
-2. Créer une branche (`git checkout -b feature/nom-fonctionnalite`)
-3. Commiter vos changements (`git commit -m 'Ajout de fonctionnalité'`)
-4. Pusher sur la branche (`git push origin feature/nom-fonctionnalite`)
-5. Ouvrir une Pull Request
+**Peut-on ajouter un nouveau domaine (bruit, trafic...) ?**
+Oui : un modèle, un blueprint, des topics MQTT. L'architecture est pensée pour ça.
 
-### Standards de code
-
-- Suivre PEP 8 pour Python
-- Utiliser des docstrings Google-style
-- Maintenir une couverture de tests > 80%
-- Passer tous les tests pylint et flake8
+**Et pour une autre ville que Safi ?**
+Les zones et quartiers sont de la configuration, pas du code : le projet est réutilisable.
 
 ---
 
-## Licence
+##  Contribuer
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+1. Forkez le dépôt
+2. Créez une branche : `git checkout -b feature/ma-fonctionnalite`
+3. Commitez : `git commit -m "feat: ajoute ..."`
+4. Poussez et ouvrez une Pull Request
 
----
-
-## Contact
-
-- **Projet** : [GitHub - SmartSafi](https://github.com/votre-org/smartsafi)
-- **Documentation** : [docs.smartsafi.com](https://docs.smartsafi.com)
-- **Support** : support@smartsafi.com
+Convention de commits : [Conventional Commits](https://www.conventionalcommits.org/fr/) (`feat`, `fix`, `docs`, `refactor`, `test`).
 
 ---
 
-## Remerciements
+## 📚 Glossaire
 
-- [Flask](https://flask.palletsprojects.com/) - Framework web
-- [MongoDB](https://www.mongodb.com/) - Base de données NoSQL
-- [Bootstrap](https://getbootstrap.com/) - Framework CSS
-- [Chart.js](https://www.chartjs.org/) - Bibliothèque de graphiques
-- [Leaflet](https://leafletjs.com/) - Bibliothèque de cartes
+| Terme | Définition |
+|---|---|
+| **MQTT** | Protocole de messagerie léger publication/abonnement pour l'IoT |
+| **Edge** | Traitement au plus près du capteur, avant le serveur central |
+| **Jumeau numérique** | Réplique virtuelle de la ville pour simuler des scénarios |
+| **IRU** | Indice de Résilience Urbaine, score 0-100 par zone |
+| **ADR** | Architecture Decision Record, trace d'une décision technique |
 
 ---
+**Fatima Chegdani**
 
-<p align="center">
-  <strong>SmartSafi - Construire la ville intelligente de demain</strong><br>
-  <em>© 2024 SmartSafi. Tous droits réservés.</em>
+<p>
+  <a href="https://fatima1234-cheg.github.io/portfolio-fatima/">
+    <img src="https://img.shields.io/badge/Portfolio-6366F1?style=flat-square&logo=googlechrome&logoColor=white" alt="Portfolio" />
+  </a>
+  <a href="https://www.linkedin.com/in/fatima-chegdani-44b840274/" target="_blank">
+  <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" />
+</a>
+  <a href="https://github.com/fatima1234-cheg">
+    <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" />
+  </a>
 </p>
+
+<div align="center">
+
+**SmartSafi : construire la ville intelligente de demain, avec ses habitants.**
+
+⭐ Si le projet vous est utile, laissez une étoile.
+
+</div>

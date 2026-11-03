@@ -1,0 +1,41 @@
+# ============================================
+# Smart City - SmartSafi Production Dependencies
+# ============================================
+
+-r requirements.txt
+
+# Production Server (WSGI)
+gunicorn==21.2.0
+uvicorn==0.23.2
+
+# Performance
+uwsgi==2.0.22
+eventlet==0.33.3
+greenlet==2.0.2
+gevent==23.7.0
+
+# Monitoring & Logging
+sentry-sdk[flask]==1.29.2
+newrelic==9.0.0
+datadog==0.47.0
+statsd==4.0.1
+
+# Health Checks
+flask-healthz==1.0.1
+
+# SSL/TLS
+cryptography==41.0.3
+pyopenssl==23.2.0
+certifi==2023.7.22
+
+# Backup
+croniter==1.4.1
+
+# Process Management
+supervisor==4.2.5
+circus==0.18.0
+
+# Container/Cloud
+boto3==1.28.40  # AWS
+azure-identity==1.14.0  # Azure
+google-cloud-secret-manager==2.16.3  # GCP
